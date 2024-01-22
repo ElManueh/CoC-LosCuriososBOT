@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { existeUsuarioTAG } = require('../../clashofclansAPI.js');
+const { existeUsuarioTag, verificarToken } = require('../../clashofclansAPI.js');
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database("./mybotdata.sqlite");
 
@@ -9,23 +9,25 @@ module.exports = {
 		.setName('vincular-cuenta')
 		.setDescription('Vincula tu cuenta de Clash Of Clans a Discord.')
 		.addStringOption(option => option
-			.setName('tag')
+			.setName('usuario-tag')
 			.setDescription('Este es el TAG de tu cuenta de Clash Of Clans.')
+			.setRequired(true))
+		.addStringOption(option => option
+			.setName('codigo-api')
+			.setDescription('Este es el codigo API de tu cuenta de Clash Of Clans.')
 			.setRequired(true)),
 	async execute(interaction) {
-		const usuarioTAG = interaction.options.getString('tag');
+		const usuarioTag = interaction.options.getString('usuario-tag');
+		const usuarioApi = interaction.options.getString('codigo-api');
 		const canal = interaction.client.channels.cache.get('1198348572861673542');
 		const usuario = interaction.user;
 		let solicitudDB, respuestaDB;
-
-		// Compruebo que el TAG existe
-		if (!await existeUsuarioTAG(usuarioTAG)) return interaction.reply({ content: 'El TAG proporcionado no es correcto.', ephemeral: true });
 
 		// Creo la tabla si no existe
 		solicitudDB = 'CREATE TABLE IF NOT EXISTS usuarios (discordID TEXT, cocTAG TEXT)';
 		await db.run(solicitudDB);
 
-		// Compruebo que el usuario no se encuentre vinculado a otra cuenta
+		// Compruebo que el usuario no se encuentre vinculado a otra cuenta de clashofclans
 		solicitudDB = 'SELECT * FROM usuarios WHERE discordID = ?';
 		respuestaDB = await new Promise((resolve, reject) => {
 			db.get(solicitudDB, `${usuario.id}`, (err, row) => {
@@ -37,11 +39,17 @@ module.exports = {
 			return interaction.reply({ content: 'Tu cuenta de Discord se encuentra vinculada ya a una cuenta de ClashOfClans.\n' +
 												'Desvinculate de la anterior antes de volver a vincularte a otra cuenta.', ephemeral: true });
 		}
-		
+
+		// Compruebo que el TAG existe
+		if (!await existeUsuarioTag(usuarioTag)) return interaction.reply({ content: 'El TAG proporcionado no existe.', ephemeral: true });
+
+		// Compruebo que el token es valido
+		if (!await verificarToken(usuarioTag, usuarioApi)) return interaction.reply({ content: 'La API proporcionada no es correcta o ya ha caducado.', ephemeral: true });
+
 		// Compruebo que el TAG no este asignado a otro usuario
 		solicitudDB = 'SELECT * FROM usuarios WHERE cocTAG = ?';
 		respuestaDB = await new Promise((resolve, reject) => {
-			db.get(solicitudDB, `${usuarioTAG}`, (err, row) => {
+			db.get(solicitudDB, `${usuarioTag}`, (err, row) => {
 				if (err) reject(err.message);
 				resolve(row);
 			});
@@ -53,7 +61,7 @@ module.exports = {
 		// Vinculamos al usuario con el TAG
 		solicitudDB = 'INSERT INTO usuarios (discordID, cocTAG) VALUES (?, ?)';
 		respuestaDB = await new Promise((resolve, reject) => {
-			db.run(solicitudDB, `${usuario.id}`, `${usuarioTAG}`, function(err) {
+			db.run(solicitudDB, `${usuario.id}`, `${usuarioTag}`, function(err) {
 				if (err) reject(err.message);
 				interaction.reply({ content: 'Se te ha vinculado correctamente a la cuenta de ClashOfClans.', ephemeral: true });
 			})

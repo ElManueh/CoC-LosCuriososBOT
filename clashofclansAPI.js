@@ -10,80 +10,52 @@ const axiosConfig = {
   },
 };
 
-function peticionApi(apiUrl) {
-  return axios.get(apiUrl, axiosConfig)
-  .then(response => {
-    return response.data;
-  })
-  .catch(error => {
-    //console.error(error.response.data);
-  });
+// Solicitud API GET
+async function peticionApiGet(apiUrl) {
+  try {
+    const respuestaApi = await axios.get(apiUrl, axiosConfig);
+    return respuestaApi.data;
+  } catch (error) {
+    // console.error('- Solicitud a COC_API incorrecta.');
+    throw error;
+  }
 }
 
-// Extraer informacion importante sobre un usuario
-function playerInfo(playerTag) {
-  let apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(playerTag)}`;
-  peticionApi(apiUrl)
-  .then(usuario => {
-    console.log(`Nombre: ${usuario.name}`);
-    console.log(`Tag: ${usuario.tag}`);
-    console.log(`Rol: ${usuario.role}`);
-    let participaGuerra = usuario.warPreference == "in" ? "Si" : "No" ;
-    console.log(`GuerraParticipacion: ${participaGuerra} `);
-    console.log(`ContribucionTotalCapital: ${usuario.clanCapitalContributions}`);
-    console.log("");
-  })
-  .catch(error => {
-    console.error(error.usuario);
-  });  
+// Solicitud API POST
+async function peticionApiPost(apiUrl, bodyData) {
+  const data = { "token": `${bodyData}` };
+  try {
+    const respuestaApi = await axios.post(apiUrl, data, axiosConfig);
+    return respuestaApi.data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 }
 
-function obtenerJugadoresClan(clanTag) {
-  let apiUrl = `${process.env.LINK_API}/clans/${encodeURIComponent(clanTag)}/members`;
-  return peticionApi(apiUrl)
-  .then(miembrosClan => {
-    return miembrosClan.items
-  })
-  .catch(error => {
-    console.error(error.miembrosClan);
-  });  
+// Comprobar TAG valido de usuario
+async function existeUsuarioTag(usuarioTag) {
+  const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}`;
+  try {
+    await peticionApiGet(apiUrl);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-function infoAsaltoSemana(semanasDesdeUltimoAsalto = 0) {
-  let apiUrl = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/capitalraidseasons`;
-  return peticionApi(apiUrl)
-  .then(listaAsaltos => {
-    return listaAsaltos.items[semanasDesdeUltimoAsalto];
-  })
-  .catch(error => {
-    console.error(error.listaAsaltos);
-  }); 
-}
-
-function prueba() {
-  let apiUrl = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}`;
-  return peticionApi(apiUrl)
-  .then(infoClan => {
-    console.log(infoClan);
-  })
-  .catch(error => {
-    console.error(error.infoClan);
-  }); 
-}
-
-// Funcion que comprueba si un TAG existe
-function existeUsuarioTAG(usuarioTAG) {
-  let apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTAG)}`;
-  return peticionApi(apiUrl)
-  .then(usuario => {
-    return usuario ? true : false;
-  })
-  .catch(error => {
-    console.error(error.usuario);
-  });  
+// Verificar cuenta de usuario con tokenApi
+async function verificarToken(usuarioTag, usuarioTokenApi) {
+  const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}/verifytoken`;
+  try {
+    const respuesta = await peticionApiPost(apiUrl, usuarioTokenApi);
+    return respuesta.status == "ok" ? true : false;
+  } catch {
+    return false;
+  }
 }
 
 module.exports = {
-  prueba,
-  existeUsuarioTAG
+  existeUsuarioTag,
+  verificarToken
 }
