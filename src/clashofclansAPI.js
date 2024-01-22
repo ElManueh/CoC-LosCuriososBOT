@@ -1,6 +1,9 @@
 const axios = require('axios');
+const { discordSort } = require('discord.js');
 const dotenv = require('dotenv');
 dotenv.config();
+
+const clanTag = '#2G00G8RP8';
 
 // Configuración de la solicitud con la clave de API
 const axiosConfig = {
@@ -55,7 +58,20 @@ async function verificarToken(usuarioTag, usuarioTokenApi) {
   }
 }
 
+// Devuelve el role que tiene el usuario
+async function obtenerUsuarioRol(usuarioTag) {
+  const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}`;
+  try {
+    const respuesta = await peticionApiGet(apiUrl);
+    if (respuesta.clan.tag != clanTag) return 'not_member';
+    return respuesta.role.toLowerCase();
+  } catch {
+    return 'not_member';
+  }
+}
+
 module.exports = {
   existeUsuarioTag,
-  verificarToken
+  verificarToken,
+  obtenerUsuarioRol
 }
