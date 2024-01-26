@@ -1,0 +1,16 @@
+{
+    "error": "Se ha detectado un problema. Vuelve a intentarlo más tarde.",
+
+    "discord": {
+        "modificar_nombre_owner": "No se puede cambiar el nombre al owner. Cambialo manualmente."
+    },
+
+    "clashofclans": {
+        "discord_ya_vinculado": "Tu cuenta de Discord se encuentra vinculada ya a una cuenta de ClashOfClans.\nDesvinculate de la anterior antes de volver a vincularte a otra cuenta.",
+        "tag_incorrecto": "El TAG proporcionado no existe.",
+        "api_incorrecta": "La API proporcionada no es correcta o ya ha caducado.",
+        "tag_ya_vinculado": "El TAG ya se encuentra asignado en otro usuario. Contacte con un moderador.",
+        "vinculado_ok": "Se te ha vinculado correctamente a la cuenta de ClashOfClans.",
+        "no_vinculado": "No te encuentras vinculado a ninguna cuenta de ClashOfClans."
+    }
+}

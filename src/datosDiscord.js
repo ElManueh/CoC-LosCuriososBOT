@@ -6,6 +6,9 @@ const rangos = {
     'coleader': '1198307044621570148',
 };
 
+let canal_logs = '1198326143846199436';
+
 module.exports = {
-    rangos
+    rangos,
+    canal_logs
 }

@@ -1,8 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { existeUsuarioTag, verificarToken, obtenerUsuarioRol } = require('../../src/clashofclansAPI.js');
-const { rangos } = require('../../src/datos.js');
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database("./mybotdata.sqlite");
+const archivoClashOfClansAPI = require('../../src/clashofclansAPI.js');
+const archivoDatosDiscord = require('../../src/datosDiscord.js');
+const archivoDB = require('../../src/basededatos.js');
+const fs = require('fs');
+const mensaje = JSON.parse(fs.readFileSync('./src/locale.json', 'utf-8'));
 
 module.exports = {
 	category: 'utility',
@@ -20,72 +21,81 @@ module.exports = {
 	async execute(interaction) {
 		const usuarioTag = interaction.options.getString('usuario-tag');
 		const usuarioApi = interaction.options.getString('codigo-api');
-		const canal = interaction.client.channels.cache.get('1198348572861673542');
-		const usuario = interaction.user;
 		let solicitudDB, respuestaDB;
 
-		// Creo la tabla si no existe
-		solicitudDB = 'CREATE TABLE IF NOT EXISTS usuarios (discordID TEXT, cocTAG TEXT)';
-		await db.run(solicitudDB);
-
-		// Compruebo que el usuario no se encuentre vinculado a otra cuenta de clashofclans
-		solicitudDB = 'SELECT * FROM usuarios WHERE discordID = ?';
-		respuestaDB = await new Promise((resolve, reject) => {
-			db.get(solicitudDB, `${usuario.id}`, (err, row) => {
-				if (err) reject(err.message);
-				resolve(row);
-			});
-		});
-		if (respuestaDB) return await interaction.reply({ content: 'Tu cuenta de Discord se encuentra vinculada ya a una cuenta de ClashOfClans.\n' +
-															  'Desvinculate de la anterior antes de volver a vincularte a otra cuenta.', ephemeral: true });
+		try {	// Compruebo que el usuario no se encuentre vinculado a otra cuenta de clashofclans
+			solicitudDB = 'SELECT * FROM usuarios WHERE discordID = ?';
+			respuestaDB = await archivoDB.solicitarDB1Parametro(solicitudDB, interaction.user.id);
+			if (respuestaDB) return await interaction.reply({ content: mensaje.clashofclans.discord_ya_vinculado, ephemeral: true });
+		} catch (error) {
+			console.log('Error consulta DB.\n' + error);
+			return await interaction.reply({ content: mensaje.error, ephemeral: true });
+		}
 
 		// Compruebo que el TAG existe
-		if (!await existeUsuarioTag(usuarioTag)) return await interaction.reply({ content: 'El TAG proporcionado no existe.', ephemeral: true });
+		if (!await archivoClashOfClansAPI.existeUsuarioTag(usuarioTag)) return await interaction.reply({ content: mensaje.clashofclans.tag_incorrecto, ephemeral: true });
 
 		// Compruebo que el token es valido
-		if (!await verificarToken(usuarioTag, usuarioApi)) return interaction.reply({ content: 'La API proporcionada no es correcta o ya ha caducado.', ephemeral: true });
+		if (!await archivoClashOfClansAPI.verificarToken(usuarioTag, usuarioApi)) return interaction.reply({ content: mensaje.clashofclans.api_incorrecta, ephemeral: true });
 
-		// Compruebo que el TAG no este asignado a otro usuario
-		solicitudDB = 'SELECT * FROM usuarios WHERE cocTAG = ?';
-		respuestaDB = await new Promise((resolve, reject) => {
-			db.get(solicitudDB, `${usuarioTag}`, (err, row) => {
-				if (err) reject(err.message);
-				resolve(row);
-			});
-		});
-		if (respuestaDB) return await interaction.reply({ content: 'El TAG ya se encuentra asignado en otro usuario. Contacte con un moderador.', ephemeral: true });
+		try {	// Compruebo que el TAG no este asignado a otro usuario
+			solicitudDB = 'SELECT * FROM usuarios WHERE cocTAG = ?';
+			respuestaDB = await archivoDB.solicitarDB1Parametro(solicitudDB, usuarioTag);
+			if (respuestaDB) return await interaction.reply({ content: mensaje.clashofclans.tag_ya_vinculado, ephemeral: true });
+		} catch (error) {
+			console.log('Error consulta DB.\n' + error);
+			return await interaction.reply({ content: mensaje.error, ephemeral: true });
+		}
 
-		// Vinculamos al usuario con el TAG
-		solicitudDB = 'INSERT INTO usuarios (discordID, cocTAG) VALUES (?, ?)';
-		respuestaDB = await new Promise((resolve, reject) => {
-			db.run(solicitudDB, `${usuario.id}`, `${usuarioTag}`, function(err) {
-				if (err) reject(err.message);
-				resolve(true);
-			})
-		})
-		if (!respuestaDB) return await interaction.reply({ content: 'ERROR', ephemeral: true });
+		try {	// Vinculamos el usuario con el TAG
+			solicitudDB = 'INSERT INTO usuarios (discordID, cocTAG) VALUES (?, ?)';
+			respuestaDB = await archivoDB.ejecutarDB2Parametro(solicitudDB, interaction.user.id, usuarioTag);
+			if (!respuestaDB) return await interaction.reply({ content: mensaje.error, ephemeral: true });
+		} catch (error) {
+			console.log('Error inserción DB.\n' + error);
+			return await interaction.reply({ content: mensaje.error, ephemeral: true });
+		}
+
+		// ==========================
+		// ==== TODO HA IDO BIEN ====
+		// ==========================
+		let roleID;
+		try {	// asignamos el role correspondiente
+			roleID = archivoDatosDiscord.rangos[await archivoClashOfClansAPI.obtenerUsuarioRol(usuarioTag)];
+		} catch (error) {
+			console.log('Error obtiendo el rol en la API.\n' + error);
+			return interaction.reply({ content: mensaje.error, ephemeral: true });
+		}
 		
-		// TODO HA IDO BIEN
-		interaction.reply({ content: 'Se te ha vinculado correctamente a la cuenta de ClashOfClans.', ephemeral: true });
+		let miembro = interaction.guild.members.cache.get(interaction.user.id);
+		if (!miembro) miembro = interaction.guild.members.fetch(interaction.user.id);
+		miembro.roles.add(roleID);
 
-		const roleID = rangos[await obtenerUsuarioRol(usuarioTag)];
-		await interaction.guild.members.cache.get(usuario.id).roles.add(roleID);
+		let nombreCOC;
+        try {
+            nombreCOC = await archivoClashOfClansAPI.obtenerUsuarioNombre(usuarioTag);
+        } catch (error) {
+            console.error('Error obteniendo el nombre en la API.\n' + error);
+            return await interaction.reply({ content: mensaje.error, ephemeral: true });
+        }
 
-		return;
-
-		// si todo va bien
-		const mensajeEmbed = new EmbedBuilder()
-			.setColor(0x0099FF)
-			.setAuthor({ name: `${usuario.id}`, iconURL: `${usuario.avatarURL()}` })
-			.addFields(
-				{ name: 'Nombre', value: `${usuario.tag}`, inline: true },
-				{ name: 'ID', value: `${usuario.id}`, inline: true},
-				{ name: 'Tag CoC', value: `${usuarioTAG}`, inline: true },
-			)
-			.setTimestamp()
-			.setFooter({ text: `${usuario.id}`, iconURL: `${usuario.avatarURL()}` });
-
-		//await canal.send({ embeds: [mensajeEmbed] });
-		//await interaction.reply({ content: 'no se que poner', ephemeral: true });
+		await interaction.reply({ content: mensaje.clashofclans.vinculado_ok, ephemeral: true });
+        if (interaction.guild.ownerId == interaction.user.id)
+			await interaction.followUp({ content: mensaje.discord.modificar_nombre_owner, ephemeral: true });
+		else
+			await miembro.setNickname(nombreCOC);
+        
+		const mensajeEmbedLog = new EmbedBuilder()
+            .setColor(0x00FF00)
+            .addFields(
+                { name: 'Discord', value: `${interaction.user.tag}`, inline: true },
+                { name: 'Nombre CoC', value: `${nombreCOC}`, inline: true },
+                { name: 'Tag CoC', value: `${usuarioTag}`, inline: true },
+            )
+            .setTimestamp()
+            .setFooter({ text: `${interaction.user.id}`, iconURL: `${interaction.user.avatarURL()}` });
+		
+		const canal = interaction.guild.channels.cache.get(archivoDatosDiscord.canal_logs);
+		canal.send({ embeds: [mensajeEmbedLog]});
 	},
 };

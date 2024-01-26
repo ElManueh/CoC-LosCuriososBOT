@@ -1,9 +1,6 @@
 const axios = require('axios');
-const { discordSort } = require('discord.js');
 const dotenv = require('dotenv');
 dotenv.config();
-
-const clanTag = '#2G00G8RP8';
 
 // Configuración de la solicitud con la clave de API
 const axiosConfig = {
@@ -19,7 +16,6 @@ async function peticionApiGet(apiUrl) {
     const respuestaApi = await axios.get(apiUrl, axiosConfig);
     return respuestaApi.data;
   } catch (error) {
-    // console.error('- Solicitud a COC_API incorrecta.');
     throw error;
   }
 }
@@ -31,7 +27,6 @@ async function peticionApiPost(apiUrl, bodyData) {
     const respuestaApi = await axios.post(apiUrl, data, axiosConfig);
     return respuestaApi.data;
   } catch (error) {
-    console.error(error);
     throw error;
   }
 }
@@ -52,7 +47,7 @@ async function verificarToken(usuarioTag, usuarioTokenApi) {
   const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}/verifytoken`;
   try {
     const respuesta = await peticionApiPost(apiUrl, usuarioTokenApi);
-    return respuesta.status == "ok" ? true : false;
+    return (respuesta.status == "ok") ? true : false;
   } catch {
     return false;
   }
@@ -63,15 +58,27 @@ async function obtenerUsuarioRol(usuarioTag) {
   const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}`;
   try {
     const respuesta = await peticionApiGet(apiUrl);
-    if (respuesta.clan.tag != clanTag) return 'not_member';
-    return respuesta.role.toLowerCase();
+    return (respuesta.clan.tag == process.env.CLAN_TAG) ? respuesta.role.toLowerCase() : 'not_member';
   } catch {
     return 'not_member';
+  }
+}
+
+// Devuelve el nombre que tiene el usuario
+async function obtenerUsuarioNombre(usuarioTag) {
+  const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}`;
+  try {
+    const respuesta = await peticionApiGet(apiUrl);
+    return respuesta.name;
+  } catch (error) {
+    //console.log(error);
+    throw error;
   }
 }
 
 module.exports = {
   existeUsuarioTag,
   verificarToken,
-  obtenerUsuarioRol
+  obtenerUsuarioRol,
+  obtenerUsuarioNombre
 }
