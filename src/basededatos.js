@@ -1,6 +1,17 @@
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database("./mybotdata.sqlite");
 
+
+// GET (1 parámetro)
+async function solicitarDB0Parametro(solicitudDB) {
+    return new Promise((resolve, reject) => {
+        db.all(solicitudDB, (err, row) => {
+            if (err) reject(err.message);
+            resolve(row);
+        });
+    });
+}
+
 // GET (1 parámetro)
 async function solicitarDB1Parametro(solicitudDB, primerParametro) {
     return new Promise((resolve, reject) => {
@@ -32,6 +43,7 @@ async function ejecutarDB2Parametro(solicitudDB, primerParametro, segundoParamet
 }
 
 module.exports = {
+    solicitarDB0Parametro,
     solicitarDB1Parametro,
     ejecutarDB1Parametro,
     ejecutarDB2Parametro
