@@ -1,4 +1,5 @@
 const axios = require('axios');
+const mensajes = require('./locale.json');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -76,9 +77,20 @@ async function obtenerUsuarioNombre(usuarioTag) {
   }
 }
 
+async function actualizarDatosMiembros() {
+  const apiUrl = `${process.env.LINK_API}/${encodeURIComponent(process.env.CLAN_TAG)}/members`
+  try {
+    const respuesta = await peticionApiGet(apiUrl);
+    return respuesta;
+  } catch (error) {
+    console.error(mensajes.error + '\n' + error);
+  }
+}
+
 module.exports = {
   existeUsuarioTag,
   verificarToken,
   obtenerUsuarioRol,
-  obtenerUsuarioNombre
+  obtenerUsuarioNombre,
+  actualizarDatosMiembros
 }
