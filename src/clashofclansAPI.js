@@ -78,12 +78,12 @@ async function obtenerUsuarioNombre(usuarioTag) {
 }
 
 async function actualizarDatosMiembros() {
-  const apiUrl = `${process.env.LINK_API}/${encodeURIComponent(process.env.CLAN_TAG)}/members`
+  const apiUrl = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/members`
   try {
     const respuesta = await peticionApiGet(apiUrl);
-    return respuesta;
+    return respuesta.items;
   } catch (error) {
-    console.error(mensajes.error + '\n' + error);
+    console.error(mensajes.error + '\n\t' + error);
   }
 }
 
