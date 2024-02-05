@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const archivoClashOfClansAPI = require('../../src/clashofclansAPI.js');
 const archivoDatosDiscord = require('../../src/datosDiscord.js');
-const archivoDB = require('../../src/basededatos.js');
+const archivoDB = require('../../src/comandosDB.js');
 const fs = require('fs');
 const mensaje = JSON.parse(fs.readFileSync('./src/locale.json', 'utf-8'));
 
