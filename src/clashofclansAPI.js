@@ -87,10 +87,22 @@ async function actualizarDatosMiembros() {
   }
 }
 
+async function obtenerUsuario(usuarioTag) {
+  const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}`;
+  try {
+    const respuesta = await peticionApiGet(apiUrl);
+    return respuesta;
+  } catch (error) {
+    //console.log(error);
+    throw error;
+  }
+}
+
 module.exports = {
   existeUsuarioTag,
   verificarToken,
   obtenerUsuarioRol,
   obtenerUsuarioNombre,
-  actualizarDatosMiembros
+  actualizarDatosMiembros,
+  obtenerUsuario
 }

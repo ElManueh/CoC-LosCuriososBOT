@@ -1,7 +1,6 @@
-const { Events, DefaultWebSocketManagerOptions } = require('discord.js');
+const { Events } = require('discord.js');
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database("./mybotdata.sqlite");
-const funcionesBD = require("../src/basededatos");
 const clashofclansAPI = require('../src/clashofclansAPI');
 
 module.exports = {
@@ -9,104 +8,102 @@ module.exports = {
 	once: true,
 	async execute(client) {
 		console.log(`Ready! Logged in as ${client.user.tag}`);
+		let solicitudDB, respuestaDB;
 
-		let solicitudDB = `CREATE TABLE IF NOT EXISTS usuariosCOC (
+		solicitudDB = `CREATE TABLE IF NOT EXISTS usuariosCOC (
 			discordID			TEXT 		UNIQUE,
 			tag 				TEXT 		NOT NULL	UNIQUE PRIMARY KEY,
 			nombre 				TEXT 		NOT NULL,
 			rango 				TEXT 		NOT NULL,
-			preferenciaGuerra 	TEXT 		NOT NULL	DEFAULT "out",	
-			ataquesUltGuerra 	TEXT 		NOT NULL	DEFAULT "-",
-			puntosUltJuegos 	TEXT 		NOT NULL 	DEFAULT "0",
-			puntosUltAsaltos 	TEXT 		NOT NULL 	DEFAULT "0",
-			totalCapital 		TEXT	 	NOT NULL	DEFAULT "0"
+			preferenciaGuerra 	TEXT 		DEFAULT "out",	
+			ataquesUltGuerra 	TEXT 		DEFAULT "-",
+			puntosUltJuegos 	TEXT 		DEFAULT "0",
+			puntosUltAsaltos 	TEXT 		DEFAULT "0",
+			totalCapital 		TEXT	 	DEFAULT "0"
 			)`;
 
-		
-		db.run(solicitudDB, (result, err) => {
-			if (!err) console.log(result);
-			else console.log(err);
+		respuestaDB = await new Promise(function (resolve) {	// creamos la tabla
+			db.run(solicitudDB, (err) => {
+				if (!err) return resolve(true);
+				console.error(err.message); return resolve(false);
+			});
 		});
+		if (!respuestaDB) return;
 
-			return;
-		
-		console.error('ERROR CREANDO / CARGANDO LA BASE DE DATOS\n' + error);
-		console.log("f");
-		
+		setInterval(async () => {	// BUCLE
 
-		
-		
+			solicitudDB = 'SELECT * FROM usuariosCOC';
+			respuestaDB = await new Promise(function (resolve) {	// obtengo todos los usuarios de nuestra DB
+				db.all(solicitudDB, (err, rows) => {
+					if (!err) return resolve(rows);
+					console.error(err.message); return resolve(false);
+				});
+			});
+			if (!respuestaDB) return;
 
-		// puntos en los ultimos juegos	CAMPEON DE LOS JUEGOS
-		// puntos en el ultimo asalto	CAPITALISMO AGRESIVO
-		// contribuido 	MEJOR ALIADO DEL CLAN
-		// ataques ultima guerra { -, 0, 1, 2 }
-		// escudo guerra
+			let usuariosDB = respuestaDB;
+			let usuariosAPI;
+			await clashofclansAPI.actualizarDatosMiembros()	// obtengo los datos de los usuarios del clan
+				.then(usuariosCOC => usuariosAPI = usuariosCOC)
+				.catch(err => console.error(err));
 
-		return;
-		try {
-			let solicitudDB = 'CREATE TABLE IF NOT EXISTS usuarios (discordID TEXT, cocTAG TEXT, nombreCOC TEXT, rangoCOC TEXT, capital INTEGER)';
-			db.run(solicitudDB);
-		} catch (error) {
-			console.error('Error al crear la DB\n' + error);
-		}
+			usuariosAPI = usuariosAPI.map(miembro => clashofclansAPI.obtenerUsuario(miembro.tag));
+			await Promise.all(usuariosAPI)
+				.then(respuesta => usuariosAPI = respuesta)
+				.catch(err => console.error(err));
 
-		let solicitudD2B, respuestaDB;
-
-		setInterval(async () => {
-			// AQUI SE ACTUALIZAN LOS VALORES
-
-			// nombre
-			// rango
-			// capital
-			
-			solicitudDB = 'SELECT * FROM usuarios';
-			respuestaDB = await new Promise((resolve, reject) => {
-				db.all(solicitudDB, (err, row) => {
-					if (!err) resolve(row);
-					reject(err);
-				})
-			})
-
-			
-			let datosMiembros;
-			try {
-				datosMiembros = await clashofclansAPI.actualizarDatosMiembros();
-			} catch (error) {
-				console.log('error');
-			}
-
-			let a;
-			for (const miembro of datosMiembros) {
-				// comprobamos tag, nombre y rol
-				// miembro.tag miembro.name miembro.role
-
-				// mirar si el usuario existe en la db
-				// si no existe añadirlo con los nuevos valores
-				// si existe comprobar cada uno de los valores
-				// si un valor es diferente, actualizar la db con los nuevos valores del usuario
-
-				a = respuestaDB.filter(usuarioDB => usuarioDB.cocTAG == miembro.tag);
-				//console.log(a);
-
-				
-				if (a.length == 0) {	// insertamos si no existe y acabamos
-					let solicitudDB = 'INSERT INTO usuarios (discordID, cocTAG, nombreCOC, rangoCOC, capital) VALUES (?, ?, ?, ?, ?)';
-					db.run(solicitudDB, null, miembro.tag, miembro.name, miembro.role, 0, () => {
-						console.log('insertado');
+			for (let usuarioAPI of usuariosAPI) {	// por cada miembro en el clan
+				let usuarioDB = usuariosDB.filter(usuarioDB => usuarioDB.tag == usuarioAPI.tag);	// busco si el miembro esta en la DB
+				if (usuarioDB.length == 0) {	// el usuario no existe en la DB, lo creamos
+					let solicitudDB = `INSERT INTO usuariosCOC (discordID, tag, nombre, rango) 
+										VALUES (?, ?, ?, ?)`;
+					respuestaDB = await new Promise(function(resolve) {
+						db.run(solicitudDB, null, usuarioAPI.tag, usuarioAPI.name, usuarioAPI.role, (err) => {
+							if (!err) return resolve(true);
+							console.error(err.message); return resolve(false);
+						});
 					});
-				} else {
-					a = a[0];
-					if (a.nombreCOC != miembro.name || a.rangoCOC != miembro.role) {	// valores desactualizados
-						solicitudDB = 'UPDATE usuarios SET nombreCOC = ?, rangoCOC = ? WHERE cocTAG = ?';
-						db.run(solicitudDB, miembro.name, miembro.role, miembro.tag, () => {
-							console.log('usuario actualizado');
-						})
-					}
+					if (!respuestaDB) return;
+					continue;
 				}
+
+				usuarioDB = usuarioDB[0];
+				if (usuarioDB.nombre != usuarioAPI.name) {	// nombre cambiado
+					solicitudDB = 'UPDATE usuariosCOC SET nombre = ? WHERE tag = ?';
+					respuestaDB = await new Promise(function (resolve) {
+						db.run(solicitudDB, usuarioAPI.name, usuarioAPI.tag, (err) => {
+							if (!err) return resolve(true);
+							console.error(err.message); return resolve(false);
+						});
+					});
+					if (!respuestaDB) return;
+				}
+
+				if (usuarioDB.tag == '#GQQGJCUYU') console.log(usuarioDB.rango + ' ' + usuarioAPI.role);
 				
+				if (usuarioDB.rango != usuarioAPI.role) {	// rango cambiado
+					solicitudDB = 'UPDATE usuariosCOC SET rango = ? WHERE tag = ?';
+					respuestaDB = await new Promise(function (resolve) {
+						db.run(solicitudDB, usuarioAPI.role, usuarioAPI.tag, (err) => {
+							if (!err) return resolve(true);
+							console.error(err.message); return resolve(false);
+						});
+					});
+					if (!respuestaDB) return;
+				}
+
+				if (usuarioDB.preferenciaGuerra != usuarioAPI.warPreference) {
+					solicitudDB = 'UPDATE usuariosCOC SET preferenciaGuerra = ? WHERE tag = ?';
+					respuestaDB = await new Promise(function (resolve) {
+						db.run(solicitudDB, usuarioAPI.warPreference, usuarioAPI.tag, (err) => {
+							if (!err) return resolve(true);
+							console.error(err.message); return resolve(false);
+						});
+					});
+					if (!respuestaDB) return;
+				}
 			}
-		}, 3000);
+		}, 30000);
 
 	},
 };
