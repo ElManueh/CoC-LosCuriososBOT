@@ -1,11 +1,46 @@
-const clashofclansAPI = require('./clashofclansAPI.js');
+const clashofclansAPI = require('../src/clashofclansAPI.js');
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database("./mybotdata.sqlite");
-const db2 = new sqlite3.Database("./mybotdata2.sqlite");
-
 
 
 const tag = '#CLGJ02V9';
+let solicitudDB, respuestaDB;
+
+
+let pref = "'in'"
+
+solicitudDB = `SELECT nombre FROM usuariosCOC WHERE preferenciaGuerra = ${pref} AND discordID IS NOT NULL`;
+
+console.log(solicitudDB);
+
+let a;
+respuestaDB = db.all(solicitudDB, (err, rows) => {
+    return rows;
+})
+
+
+
+console.log(a)
+console.log(respuestaDB)
+
+return;
+respuestaDB = new Promise((resolve) => {
+    db.all(solicitudDB, (err, rows) => {
+        return resolve(rows);
+    })
+})
+
+respuestaDB.then(r => {
+    console.log(r);
+})
+
+
+
+
+
+
+
+return;
 clashofclansAPI.obtenerUsuario(tag)
     .then(usuario => {
         let info = usuario.achievements.filter(logro => logro.name == 'Most Valuable Clanmate');
@@ -13,7 +48,7 @@ clashofclansAPI.obtenerUsuario(tag)
     });
 
     //
-let solicitudDB, respuestaDB;
+
 
 
 solicitudDB = 'UPDATE usuariosCOC SET discordID = ? WHERE tag = ?';
