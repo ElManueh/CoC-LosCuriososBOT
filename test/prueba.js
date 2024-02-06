@@ -1,4 +1,5 @@
 const clashofclansAPI = require('../src/clashofclansAPI.js');
+const comandosDB = require('../src/comandosDB.js');
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database("./mybotdata.sqlite");
 
@@ -7,6 +8,15 @@ const tag = '#CLGJ02V9';
 let solicitudDB, respuestaDB;
 
 
+
+ comandosDB.ejecutarDBrun('SELECT * FROM usuariosCOCs')
+    .then(m => console.log(m))
+    .catch(err => console.error(err));
+
+
+
+
+return;
 let pref = "'in'"
 
 solicitudDB = `SELECT nombre FROM usuariosCOC WHERE preferenciaGuerra = ${pref} AND discordID IS NOT NULL`;

@@ -58,8 +58,6 @@ module.exports = {
 					await comandosDB.ejecutarDBrun(solicitudDB)
 						.catch(err => { console.error(err); return; });	
 				}
-
-				if (usuarioDB.tag == '#GQQGJCUYU') console.log(usuarioDB.rango + ' ' + usuarioAPI.role);
 				
 				if (usuarioDB.rango != usuarioAPI.role) {	// rango cambiado
 					solicitudDB = `UPDATE usuariosCOC SET rango = '${usuarioAPI.role}' WHERE tag = '${usuarioAPI.tag}'`;

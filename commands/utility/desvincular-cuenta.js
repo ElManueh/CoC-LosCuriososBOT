@@ -1,7 +1,6 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const archivoClashOfClansAPI = require('../../src/clashofclansAPI.js');
-const archivoDatosDiscord = require('../../src/datosDiscord.js');
-const archivoDB = require('../../src/comandosDB.js');
+const { SlashCommandBuilder, EmbedBuilder, ReactionUserManager } = require('discord.js');
+const datosDiscord = require('../../src/datosDiscord.js');
+const comandosDB = require('../../src/comandosDB');
 const fs = require('fs');
 const mensaje = JSON.parse(fs.readFileSync('./src/locale.json', 'utf-8'));
 
@@ -11,52 +10,38 @@ module.exports = {
         .setName('desvincular-cuenta')
         .setDescription('Desvincula tu cuenta de Clash Of Clans de Discord.'),
     async execute(interaction) {
-        let usuarioTag;
-		let solicitudDB, respuestaDB;
-        try {   // Compruebo que el usuario se encuentra en la BBDD
-            solicitudDB = 'SELECT * FROM usuarios WHERE discordID = ?';
-            respuestaDB = await archivoDB.solicitarDB1Parametro(solicitudDB, interaction.user.id);
-            if (!respuestaDB) return interaction.reply({ content: mensaje.clashofclans.no_vinculado, ephemeral:true });
-            usuarioTag = respuestaDB.cocTAG;
-        } catch (error) {
-            console.log('Error consulta DB.\n' + error);
-            return interaction.reply({ content: mensaje.error, ephemeral: true });
-        }
+        
+        let usuarioDB, respuestaDB;
+        let solicitudDB = `SELECT * FROM usuariosCOC WHERE discordID = ${interaction.user.id}`;
+        await comandosDB.solicitarDBget(solicitudDB)    // comprobar si el usuario se encuentra vinculado
+            .then(usuario => { if (!usuario) interaction.reply({ content: mensaje.clashofclans.no_vinculado, ephemeral:true }); else usuarioDB = usuario; })
+            .catch(err => { console.error(err); interaction.reply({ content: mensaje.error, ephemeral: true }); });
+        if (!usuarioDB) return;
 
-        try {   // El usuario se encuentra en la BBDD y eliminamos su cocTAG
-            solicitudDB = 'DELETE FROM usuarios WHERE discordID = ?';
-            await archivoDB.ejecutarDB1Parametro(solicitudDB, interaction.user.id);          
-        } catch (error) {
-            console.log('Error eliminación DB.\n' + error);
-            return interaction.reply({ content: mensaje.error, ephemeral:true });
-        }
-
+        solicitudDB = `UPDATE usuariosCOC SET discordID = ${null} WHERE tag = '${usuarioDB.tag}'`;
+        await comandosDB.ejecutarDBrun(solicitudDB) // lo desvinculamos de su cuenta
+            .catch(err => { console.error(err); interaction.reply({ content: mensaje.error, ephemeral: true }); respuestaDB = true });
+        if (respuestaDB) return;
+        
+        // ahora actualizamos su rango y nombre de Discord
         let miembro = interaction.guild.members.cache.get(interaction.user.id);
         if (!miembro) miembro = interaction.guild.members.fetch(interaction.user.id);
-        for (const rango in archivoDatosDiscord.rangos) if (miembro.roles.cache.has(archivoDatosDiscord.rangos[rango])) miembro.roles.remove(archivoDatosDiscord.rangos[rango]);
+        for (const rango in datosDiscord.rangos) if (miembro.roles.cache.has(datosDiscord.rangos[rango])) miembro.roles.remove(datosDiscord.rangos[rango]); // quitamos rango
 
-        if (miembro.nickname && miembro.id != interaction.guild.ownerId) miembro.setNickname(null);
+        if (miembro.nickname && miembro.id != interaction.guild.ownerId) miembro.setNickname(null); // reiniciamos nickname
         interaction.reply({ content: 'Se te ha desvinculado correctamente de tu cuenta de ClashOfClans.', ephemeral: true });
-
-        let nombreCOC;
-        try {
-            nombreCOC = await archivoClashOfClansAPI.obtenerUsuarioNombre(usuarioTag);
-        } catch (error) {
-            console.error('Error obteniendo el nombre en la API.\n' + error);
-            return await interaction.reply({ content: mensaje.error, ephemeral: true });
-        }
 
         const mensajeEmbedLog = new EmbedBuilder()
             .setColor(0xFF0000)
             .addFields(
                 { name: 'Discord', value: `${interaction.user.tag}`, inline: true },
-                { name: 'Nombre CoC', value: `${nombreCOC}`, inline: true },
-                { name: 'Tag CoC', value: `${usuarioTag}`, inline: true },
+                { name: 'Nombre CoC', value: `${usuarioDB.nombre}`, inline: true },
+                { name: 'Tag CoC', value: `${usuarioDB.tag}`, inline: true },
             )
             .setTimestamp()
             .setFooter({ text: `${interaction.user.id}`, iconURL: `${interaction.user.avatarURL()}` });
 		
-		const canal = interaction.guild.channels.cache.get(archivoDatosDiscord.canal_logs);
+		const canal = interaction.guild.channels.cache.get(datosDiscord.canal_logs);
 		canal.send({ embeds: [mensajeEmbedLog]});
     }
 };
