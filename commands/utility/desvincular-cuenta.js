@@ -10,25 +10,29 @@ module.exports = {
         .setName('desvincular-cuenta')
         .setDescription('Desvincula tu cuenta de Clash Of Clans de Discord.'),
     async execute(interaction) {
-        
-        let usuarioDB, respuestaDB;
+        let usuarioDB;
+
         let solicitudDB = `SELECT * FROM usuariosCOC WHERE discordID = ${interaction.user.id}`;
-        await comandosDB.solicitarDBget(solicitudDB)    // comprobar si el usuario se encuentra vinculado
-            .then(usuario => { if (!usuario) interaction.reply({ content: mensaje.clashofclans.no_vinculado, ephemeral:true }); else usuarioDB = usuario; })
-            .catch(err => { console.error(err); interaction.reply({ content: mensaje.error, ephemeral: true }); });
-        if (!usuarioDB) return;
+        try {   // comprobar si el usuario se encuentra vinculado
+            usuarioDB = await comandosDB.solicitarDBget(solicitudDB);
+            if (!usuarioDB) return interaction.reply({ content: mensaje.clashofclans.no_vinculado, ephemeral:true });
+        } catch (error) {
+            console.error(error); return interaction.reply({ content: mensaje.error, ephemeral: true });
+        }
 
         solicitudDB = `UPDATE usuariosCOC SET discordID = ${null} WHERE tag = '${usuarioDB.tag}'`;
-        await comandosDB.ejecutarDBrun(solicitudDB) // lo desvinculamos de su cuenta
-            .catch(err => { console.error(err); interaction.reply({ content: mensaje.error, ephemeral: true }); respuestaDB = true });
-        if (respuestaDB) return;
+        try {   // lo desvinculamos de su cuenta
+            await comandosDB.ejecutarDBrun(solicitudDB);
+        } catch (error) {
+            console.error(err); return interaction.reply({ content: mensaje.error, ephemeral: true });
+        }
         
         // ahora actualizamos su rango y nombre de Discord
         let miembro = interaction.guild.members.cache.get(interaction.user.id);
         if (!miembro) miembro = interaction.guild.members.fetch(interaction.user.id);
         for (const rango in datosDiscord.rangos) if (miembro.roles.cache.has(datosDiscord.rangos[rango])) miembro.roles.remove(datosDiscord.rangos[rango]); // quitamos rango
 
-        if (miembro.nickname && miembro.id != interaction.guild.ownerId) miembro.setNickname(null); // reiniciamos nickname
+        if (miembro.nickname && (miembro.id != interaction.guild.ownerId)) miembro.setNickname(null); // reiniciamos nickname
         interaction.reply({ content: 'Se te ha desvinculado correctamente de tu cuenta de ClashOfClans.', ephemeral: true });
 
         const mensajeEmbedLog = new EmbedBuilder()

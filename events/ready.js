@@ -20,55 +20,54 @@ module.exports = {
 			totalCapital 		TEXT	 	DEFAULT "0"
 			)`;
 
-		await comandosDB.ejecutarDBrun(solicitudDB)
-			.catch(err => { console.error(err); return; });
+		try {
+			await comandosDB.ejecutarDBrun(solicitudDB);
+		} catch (error) { return console.error(err); }
 
 		setInterval(async () => {	// BUCLE
 			let usuariosDB, usuariosAPI;
 
 			solicitudDB = 'SELECT * FROM usuariosCOC';
-			await comandosDB.solicitarDBall(solicitudDB)	// obtengo todos los usuarios de nuestra DB
-				.then(usuarios => usuariosDB = usuarios)
-				.catch(err => { console.error(err); return; });
-			if (!usuariosDB) return;
-
-			await clashofclansAPI.actualizarDatosMiembros()	// obtengo los datos de los usuarios del clan
-				.then(usuarios => usuariosAPI = usuarios)
-				.catch(err => { console.error(err); return; });
-			if (!usuariosAPI) return;
+			try {	// obtengo todos los usuarios de nuestra DB
+				usuariosDB = await comandosDB.solicitarDBall(solicitudDB);
+			} catch (error) { return console.error(error); }
 			
-			usuariosAPI = usuariosAPI.map(usuario => clashofclansAPI.obtenerUsuario(usuario.tag)); 
-			await Promise.all(usuariosAPI)
-				.then(usuarios => usuariosAPI = usuarios)
-				.catch(err => { console.error(err); return; });
+			try {	// obtengo los datos de los usuarios del clan
+				usuariosAPI = await clashofclansAPI.obtenerUsuariosClan();
+				usuariosAPI = usuariosAPI.map(usuario => clashofclansAPI.obtenerUsuario(usuario.tag));
+				usuariosAPI = await Promise.all(usuariosAPI);
+			} catch (error) { return console.error(error); }
 
-			for (let usuarioAPI of usuariosAPI) {	// por cada miembro en el clan
-				let usuarioDB = usuariosDB.filter(usuario => usuario.tag == usuarioAPI.tag);	// busco si el miembro esta en la DB
-				
-				if (usuarioDB.length == 0) {	// el usuario no existe en la DB, lo creamos
+			for (let usuarioAPI of usuariosAPI) {	// por cada usuario en el clan
+				let usuarioDB = usuariosDB.filter(usuario => usuario.tag === usuarioAPI.tag);	// busco si el miembro esta en la DB
+				if (!usuarioDB.length) {	// el usuario no existe en la DB, lo creamos
 					let solicitudDB = `INSERT INTO usuariosCOC (discordID, tag, nombre, rango) VALUES (${null}, '${usuarioAPI.tag}', '${usuarioAPI.name}', '${usuarioAPI.role}')`;
-					await comandosDB.ejecutarDBrun(solicitudDB)
-						.catch(err => { console.error(err); return; });
+					try {
+						await comandosDB.ejecutarDBrun(solicitudDB);
+					} catch (error) { return console.error(err); }
 					continue;
 				}
 
 				usuarioDB = usuarioDB[0];
 				if (usuarioDB.nombre != usuarioAPI.name) {	// nombre cambiado
 					solicitudDB = `UPDATE usuariosCOC SET nombre = '${usuarioAPI.name}' WHERE tag = '${usuarioAPI.tag}'`;
-					await comandosDB.ejecutarDBrun(solicitudDB)
-						.catch(err => { console.error(err); return; });	
+					try {
+						await comandosDB.ejecutarDBrun(solicitudDB);
+					} catch (error) { return console.error(error); }
 				}
 				
 				if (usuarioDB.rango != usuarioAPI.role) {	// rango cambiado
 					solicitudDB = `UPDATE usuariosCOC SET rango = '${usuarioAPI.role}' WHERE tag = '${usuarioAPI.tag}'`;
-					await comandosDB.ejecutarDBrun(solicitudDB)
-						.catch(err => { console.error(err); return; });
+					try {
+						await comandosDB.ejecutarDBrun(solicitudDB);
+					} catch (error) { return console.error(error); }
 				}
 
 				if (usuarioDB.preferenciaGuerra != usuarioAPI.warPreference) {	// preferenciaGuerra cambiado
 					solicitudDB = `UPDATE usuariosCOC SET preferenciaGuerra = '${usuarioAPI.warPreference}' WHERE tag = '${usuarioAPI.tag}'`;
-					await comandosDB.ejecutarDBrun(solicitudDB)
-						.catch(err => { console.error(err); return; });
+					try {
+						await comandosDB.ejecutarDBrun(solicitudDB);
+					} catch (error) { console.error(error); }
 				}
 			}
 		}, 5000);

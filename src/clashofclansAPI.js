@@ -1,5 +1,4 @@
 const axios = require('axios');
-const mensajes = require('./locale.json');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -32,77 +31,40 @@ async function peticionApiPost(apiUrl, bodyData) {
   }
 }
 
-// Comprobar TAG valido de usuario
-async function existeUsuarioTag(usuarioTag) {
+// Obtener información de un usuario
+async function obtenerUsuario(usuarioTag) {
   const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}`;
   try {
-    await peticionApiGet(apiUrl);
-    return true;
-  } catch {
-    return false;
+    const usuario = await peticionApiGet(apiUrl);
+    return usuario;
+  } catch (error) {
+    throw error.message;
   }
 }
 
 // Verificar cuenta de usuario con tokenApi
-async function verificarToken(usuarioTag, usuarioTokenApi) {
+async function verificarTokenUsuario(usuarioTag, usuarioTokenApi) {
   const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}/verifytoken`;
   try {
-    const respuesta = await peticionApiPost(apiUrl, usuarioTokenApi);
-    return (respuesta.status == "ok") ? true : false;
-  } catch {
-    return false;
-  }
-}
-
-// Devuelve el role que tiene el usuario
-async function obtenerUsuarioRol(usuarioTag) {
-  const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}`;
-  try {
-    const respuesta = await peticionApiGet(apiUrl);
-    return (respuesta.clan.tag == process.env.CLAN_TAG) ? respuesta.role.toLowerCase() : 'not_member';
-  } catch {
-    return 'not_member';
-  }
-}
-
-// Devuelve el nombre que tiene el usuario
-async function obtenerUsuarioNombre(usuarioTag) {
-  const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}`;
-  try {
-    const respuesta = await peticionApiGet(apiUrl);
-    return respuesta.name;
+    const tokenValido = await peticionApiPost(apiUrl, usuarioTokenApi);
+    return tokenValido.status === 'ok' ? true : false;
   } catch (error) {
-    //console.log(error);
-    throw error;
+    throw error.message;
   }
 }
 
-async function actualizarDatosMiembros() {
+async function obtenerUsuariosClan() {
   const apiUrl = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/members`
   try {
-    const respuesta = await peticionApiGet(apiUrl);
-    return respuesta.items;
+    const usuarios = await peticionApiGet(apiUrl);
+    return usuarios.items;
   } catch (error) {
-    console.error(mensajes.error + '\n\t' + error);
-  }
-}
-
-async function obtenerUsuario(usuarioTag) {
-  const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}`;
-  try {
-    const respuesta = await peticionApiGet(apiUrl);
-    return respuesta;
-  } catch (error) {
-    //console.log(error);
-    throw error;
+    throw error.message;
   }
 }
 
 module.exports = {
-  existeUsuarioTag,
-  verificarToken,
-  obtenerUsuarioRol,
-  obtenerUsuarioNombre,
-  actualizarDatosMiembros,
-  obtenerUsuario
+  obtenerUsuario,
+  verificarTokenUsuario,
+  obtenerUsuariosClan
 }
