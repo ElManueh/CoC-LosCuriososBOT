@@ -60,6 +60,7 @@ module.exports = {
 					try {
 						await comandosDB.ejecutarDBrun(solicitudDB);
 					} catch (error) { return; }
+					// ACTUALIZAR NOMBRE EN DISCORD
 				}
 				
 				if (usuarioDB.rango != usuarioAPI.role) {	// rango cambiado
@@ -67,6 +68,7 @@ module.exports = {
 					try {
 						await comandosDB.ejecutarDBrun(solicitudDB);
 					} catch (error) { return; }
+					// ACTUALIZAR RANGO EN DISCORD
 				}
 
 				if (usuarioDB.preferenciaGuerra != usuarioAPI.warPreference) {	// preferenciaGuerra cambiado
@@ -76,6 +78,16 @@ module.exports = {
 					} catch (error) { return; }
 				}
 			}
+
+			let usuariosDBexternos = usuariosDB.filter(usuario => !usuariosAPI.map(usuario => usuario.tag).includes(usuario.tag));
+			for (let usuarioDBexterno of usuariosDBexternos) {	// por cada usuario que NO es del clan
+				if (usuarioDBexterno.rango === 'not_member') continue;
+				solicitudDB = `UPDATE usuariosCOC SET rango = 'not_member' WHERE tag = ${usuarioDBexterno.tag}`;
+				try {
+					await comandosDB.ejecutarDBrun(solicitudDB);
+				} catch (error) { return; }
+				// ACTUALIZAR RANGO EN DISCORD
+			} 
 		}, 5*1000);
 
 	},
