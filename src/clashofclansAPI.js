@@ -38,7 +38,7 @@ async function obtenerUsuario(usuarioTag) {
     const usuario = await peticionApiGet(apiUrl);
     return usuario;
   } catch (error) {
-    throw error.message;
+    console.error(error.message); throw error;
   }
 }
 
@@ -49,7 +49,7 @@ async function verificarTokenUsuario(usuarioTag, usuarioTokenApi) {
     const tokenValido = await peticionApiPost(apiUrl, usuarioTokenApi);
     return tokenValido.status === 'ok' ? true : false;
   } catch (error) {
-    throw error.message;
+    console.error(error.message); throw error;
   }
 }
 
@@ -59,7 +59,7 @@ async function obtenerUsuariosClan() {
     const usuarios = await peticionApiGet(apiUrl);
     return usuarios.items;
   } catch (error) {
-    throw error.message;
+    console.error(error.message); throw error;
   }
 }
 

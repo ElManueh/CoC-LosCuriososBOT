@@ -2,8 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const clashofclansAPI = require('../../src/clashofclansAPI.js');
 const comandosDB = require('../../src/comandosDB');
 const datosDiscord = require('../../src/datosDiscord.js');
-const fs = require('fs');
-const mensaje = JSON.parse(fs.readFileSync('./src/locale.json', 'utf-8'));
+const mensajes = require('../../src/locale.json');
 
 module.exports = {
 	category: 'utility',
@@ -26,31 +25,23 @@ module.exports = {
 		solicitudDB = `SELECT * FROM usuariosCOC WHERE discordID = '${interaction.user.id}'`;
 		try {	// compruebo que el usuario no se encuentre vinculado a otra cuenta de clashofclans
 			usuarioDB = await comandosDB.solicitarDBget(solicitudDB);
-			if (usuarioDB) return interaction.reply({ content: mensaje.clashofclans.discord_ya_vinculado, ephemeral: true });
-		} catch (error) {
-			console.error(error); return interaction.reply({ content: mensaje.error, ephemeral: true });
-		}
+			if (usuarioDB) return interaction.reply({ content: mensajes.clashofclans.discord_ya_vinculado, ephemeral: true });
+		} catch (error) { return interaction.reply({ content: mensajes.error, ephemeral: true }); }
 
 		try {	// Compruebo que el TAG existe
 			usuarioAPI = await clashofclansAPI.obtenerUsuario(usuarioTag);
-		} catch (error) {
-			console.error(error); return interaction.reply({ content: mensaje.clashofclans.tag_incorrecto, ephemeral: true });
-		}
+		} catch (error) { return interaction.reply({ content: mensajes.clashofclans.tag_incorrecto, ephemeral: true }); }
 
 		try {	// Compruebo que el token es valido
 			let tokenValido = await clashofclansAPI.verificarTokenUsuario(usuarioTag, usuarioApi);
-			if (!tokenValido) return interaction.reply({ content: mensaje.clashofclans.api_incorrecta, ephemeral: true });
-		} catch (error) {
-			console.error(error); return interaction.reply({ content: mensaje.error, ephemeral: true });
-		}
+			if (!tokenValido) return interaction.reply({ content: mensajes.clashofclans.api_incorrecta, ephemeral: true });
+		} catch (error) { return interaction.reply({ content: mensajes.error, ephemeral: true }); }
 
 		solicitudDB = `SELECT * FROM usuariosCOC WHERE tag = '${usuarioTag}'`;
 		try {	// compruebo que la cuenta de CoC no este vinculada a una cuenta de Discord
 			usuarioDB = await comandosDB.solicitarDBget(solicitudDB);
-			if (usuarioDB.length != 0 && usuarioDB.discordID != null) return interaction.reply({ content: mensaje.clashofclans.tag_ya_vinculado, ephemeral: true });
-		} catch (error) {
-			console.error(error); return interaction.reply({ content: mensaje.error, ephemeral: true });
-		}
+			if (usuarioDB.length != 0 && usuarioDB.discordID != null) return interaction.reply({ content: mensajes.clashofclans.tag_ya_vinculado, ephemeral: true });
+		} catch (error) { return interaction.reply({ content: mensajes.error, ephemeral: true }); }
 
 		if (usuarioDB.length == 0)	// lo añado a la DB
 			solicitudDB = `INSERT INTO usuariosCOC (discordID, tag, nombre, rango) VALUES ('${interaction.user.id}', '${usuarioAPI.tag}', '${usuarioAPI.name}', '${usuarioAPI.role}')`;
@@ -59,11 +50,9 @@ module.exports = {
 
 		try {
 			await comandosDB.ejecutarDBrun(solicitudDB);
-		} catch (error) {
-			console.error(error); return interaction.reply({ content: mensaje.error, ephemeral: true });
-		}
+		} catch (error) { return interaction.reply({ content: mensajes.error, ephemeral: true }); }
 
-		interaction.reply({ content: mensaje.clashofclans.vinculado_ok, ephemeral: true });
+		interaction.reply({ content: mensajes.clashofclans.vinculado_ok, ephemeral: true });
 
 		// actualizamos el rango del usuario
 		let roleID = datosDiscord.rangos[usuarioAPI.role];
@@ -73,7 +62,7 @@ module.exports = {
 
 		// actualizamos el nombre del usuario
         if (interaction.guild.ownerId == interaction.user.id)
-			interaction.followUp({ content: mensaje.discord.modificar_nombre_owner, ephemeral: true });
+			interaction.followUp({ content: mensajes.discord.modificar_nombre_owner, ephemeral: true });
 		else
 			await miembro.setNickname(usuarioAPI.name);
         
@@ -88,6 +77,6 @@ module.exports = {
             .setFooter({ text: `${interaction.user.id}`, iconURL: `${interaction.user.avatarURL()}` });
 		
 		const canal = interaction.guild.channels.cache.get(datosDiscord.canal_logs);
-		canal.send({ embeds: [mensajeEmbedLog]});
+		//canal.send({ embeds: [mensajeEmbedLog]});
 	},
 };

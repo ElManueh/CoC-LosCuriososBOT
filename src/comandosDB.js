@@ -6,7 +6,7 @@ async function solicitarDBget(solicitudDB) {
     return new Promise((resolve, reject) => {
         db.get(solicitudDB, (err, row) => {
             if (!err) return resolve(row);
-            return reject(err.message);
+            console.error(err); return reject(err);
         });
     });
 }
@@ -16,7 +16,7 @@ async function solicitarDBall(solicitudDB) {
     return new Promise((resolve, reject) => {
         db.all(solicitudDB, (err, rows) => {
             if (!err) return resolve(rows);
-            return reject(err.message);
+            console.error(err); return reject(err);
         });
     });
 }
@@ -26,7 +26,7 @@ async function ejecutarDBrun(solicitudDB) {
     return new Promise((resolve, reject) => {
         db.run(solicitudDB, function(err) {
             if (!err) return resolve(true);
-            return reject(err.message);
+            console.error(err); return reject(err);
         })
     });
 }
