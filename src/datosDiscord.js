@@ -7,8 +7,10 @@ const rangos = {
 };
 
 let canal_logs = '1198326143846199436';
+let servidor_id = '1198305691375505590';
 
 module.exports = {
     rangos,
-    canal_logs
+    canal_logs,
+    servidor_id
 }

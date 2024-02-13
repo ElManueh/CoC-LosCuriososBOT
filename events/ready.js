@@ -1,6 +1,8 @@
 const { Events } = require('discord.js');
 const clashofclansAPI = require('../src/clashofclansAPI');
 const comandosDB = require('../src/comandosDB');
+const discord = require('../src/discord');
+const datosDiscord = require('../src/datosDiscord');
 
 module.exports = {
 	name: Events.ClientReady,
@@ -59,16 +61,16 @@ module.exports = {
 					solicitudDB = `UPDATE usuariosCOC SET nombre = '${usuarioAPI.name}' WHERE tag = '${usuarioAPI.tag}'`;
 					try {
 						await comandosDB.ejecutarDBrun(solicitudDB);
+						await discord.cambiar_nombre(usuarioDB.discordID, usuarioAPI.name, datosDiscord.servidor_id);
 					} catch (error) { return; }
-					// ACTUALIZAR NOMBRE EN DISCORD
 				}
 				
 				if (usuarioDB.rango != usuarioAPI.role) {	// rango cambiado
 					solicitudDB = `UPDATE usuariosCOC SET rango = '${usuarioAPI.role}' WHERE tag = '${usuarioAPI.tag}'`;
 					try {
 						await comandosDB.ejecutarDBrun(solicitudDB);
+						await discord.cambiar_rango(usuarioDB.discordID, usuarioAPI.role, datosDiscord.servidor_id);
 					} catch (error) { return; }
-					// ACTUALIZAR RANGO EN DISCORD
 				}
 
 				if (usuarioDB.preferenciaGuerra != usuarioAPI.warPreference) {	// preferenciaGuerra cambiado
@@ -85,8 +87,8 @@ module.exports = {
 				solicitudDB = `UPDATE usuariosCOC SET rango = 'not_member' WHERE tag = ${usuarioDBexterno.tag}`;
 				try {
 					await comandosDB.ejecutarDBrun(solicitudDB);
+					await discord.cambiar_rango(usuarioDBexterno.discordID, 'not_member', datosDiscord.servidor_id);
 				} catch (error) { return; }
-				// ACTUALIZAR RANGO EN DISCORD
 			} 
 		}, 5*1000);
 
