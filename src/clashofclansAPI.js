@@ -15,9 +15,7 @@ async function peticionApiGet(apiUrl) {
   try {
     const respuestaApi = await axios.get(apiUrl, axiosConfig);
     return respuestaApi.data;
-  } catch (error) {
-    throw error;
-  }
+  } catch (error) { throw error; }
 }
 
 // Solicitud API POST
@@ -26,9 +24,7 @@ async function peticionApiPost(apiUrl, bodyData) {
   try {
     const respuestaApi = await axios.post(apiUrl, data, axiosConfig);
     return respuestaApi.data;
-  } catch (error) {
-    throw error;
-  }
+  } catch (error) { throw error; }
 }
 
 // Obtener información de un usuario
@@ -37,9 +33,7 @@ async function obtenerUsuario(usuarioTag) {
   try {
     const usuario = await peticionApiGet(apiUrl);
     return usuario;
-  } catch (error) {
-    console.error(error.message); throw error;
-  }
+  } catch (error) { throw error; }
 }
 
 // Verificar cuenta de usuario con tokenApi
@@ -48,19 +42,16 @@ async function verificarTokenUsuario(usuarioTag, usuarioTokenApi) {
   try {
     const tokenValido = await peticionApiPost(apiUrl, usuarioTokenApi);
     return tokenValido.status === 'ok' ? true : false;
-  } catch (error) {
-    console.error(error.message); throw error;
-  }
+  } catch (error) { throw error; }
 }
 
+// Obtener todos los usuarios que pertenecen al clan
 async function obtenerUsuariosClan() {
   const apiUrl = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/members`
   try {
     const usuarios = await peticionApiGet(apiUrl);
     return usuarios.items;
-  } catch (error) {
-    console.error(error.message); throw error;
-  }
+  } catch (error) { throw error; }
 }
 
 module.exports = {
