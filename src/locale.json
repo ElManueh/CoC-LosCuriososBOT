@@ -2,7 +2,10 @@
     "error": "Se ha detectado un problema. Vuelve a intentarlo más tarde.",
 
     "discord": {
-        "modificar_nombre_owner": "No se puede cambiar el nombre al owner. Cambialo manualmente."
+        "modificar_nombre_owner": "No se puede cambiar el nombre al owner. Cambialo manualmente.",
+        "permisos_insuficientes": "No tienes permisos para ejecutar ese comando.",
+        "consultadb_incorrecta": "La consulta realizada es incorrecta.",
+        "menu_tabla": "NombreTabla = usuariosCOC\nCampos = discordID tag nombre rango preferenciaGuerra ataquesUltGuerra puntosUltJuegos puntosUltAsaltos totalCapital"
     },
 
     "clashofclans": {
