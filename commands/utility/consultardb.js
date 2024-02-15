@@ -51,11 +51,11 @@ module.exports = {
         let respuesta2 = "";
 
         for (const linea of respuesta) {
-            if (respuesta2.length + linea.length < 2000) respuesta2 += linea;
+            if (respuesta2.length + linea.length < 2000) respuesta2 += linea + '\n';
             else {
                 respuesta2 = '```' + respuesta2 + '```';
                 await interaction.followUp({ content: respuesta2, ephemeral: true });
-                respuesta2 = linea;
+                respuesta2 = linea + '\n';
             }
         }
         respuesta2 = '```' + respuesta2 + '```';
