@@ -1,5 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, codeBlock } = require('discord.js');
 const comandosDB = require('../../src/comandosDB.js');
+const discord = require('../../src/discord.js');
 const mensajes = require('../../src/locale.json');
 
 module.exports = {
@@ -16,7 +17,7 @@ module.exports = {
         // Permisos administrador
         let usuario = interaction.guild.members.cache.get(interaction.user.id);
         if (!usuario) usuario = interaction.guild.members.fetch(interaction.user.id);
-        if (!usuario.roles.cache.has('1198307374902034432')) return interaction.reply({ content: mensajes.discord.permisos_insuficientes, ephemeral: true });
+        if (!usuario.roles.cache.has(discord.rango_administrador)) return interaction.reply({ content: mensajes.discord.permisos_insuficientes, ephemeral: true });
 
         // Tabla ayuda
         if (!solicitudDB) return interaction.reply({ content: mensajes.discord.menu_tabla, ephemeral: true });
@@ -40,10 +41,8 @@ module.exports = {
             respuesta += '\n';
         }
 
-        if (respuesta.length < 2000) {  // Tablas pequeñas
-            respuesta = '```' + respuesta + '```';
-            return interaction.reply({ content: `${respuesta}`, ephemeral: true });
-        }
+        // Tablas pequeñas
+        if (respuesta.length < 2000) return interaction.reply({ content: `${codeBlock(respuesta)}`, ephemeral: true });
         
         // Tablas grandes
         await interaction.reply({ content: 'Aqui viene la tabla grande', ephemeral: true });
@@ -53,12 +52,10 @@ module.exports = {
         for (const linea of respuesta) {
             if (respuesta2.length + linea.length < 2000) respuesta2 += linea + '\n';
             else {
-                respuesta2 = '```' + respuesta2 + '```';
-                await interaction.followUp({ content: respuesta2, ephemeral: true });
+                await interaction.followUp({ content: codeBlock(respuesta2), ephemeral: true });
                 respuesta2 = linea + '\n';
             }
         }
-        respuesta2 = '```' + respuesta2 + '```';
-        if (respuesta2.length != 0) await interaction.followUp({ content: respuesta2, ephemeral: true });
+        if (respuesta2.length != 0) await interaction.followUp({ content: codeBlock(respuesta2), ephemeral: true });
     }
 };

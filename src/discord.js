@@ -1,4 +1,13 @@
-const datosDiscord = require('./datosDiscord');
+const canal_logs = '1198326143846199436';
+const servidor_id = '1198305691375505590';
+const rango_administrador = '1198307374902034432';
+const rangos = {
+    'not_member': '1199079285630193674',
+    'member': '1198307089391558848',
+    'leader': '1198307014443544717',
+    'admin': '1198307066884935811',
+    'coLeader': '1198307044621570148',
+};
 
 // Cambiar nombre de un usuario
 async function cambiar_nombre(discordID, nombre, servidor) {
@@ -7,7 +16,7 @@ async function cambiar_nombre(discordID, nombre, servidor) {
         if (!miembro) miembro = await servidor.members.fetch(discordID);
         
         if (miembro.nickname != nombre && servidor.ownerId != discordID) await miembro.setNickname(nombre);
-    } catch (error) { console.error("Error: Cambiar nombre"); throw error; }
+    } catch (error) { throw error; }
 }
 
 // Cambiar rango de un usuario
@@ -17,19 +26,20 @@ async function cambiar_rango(discordID, rango, servidor) {
         miembro = servidor.members.cache.get(discordID);
         if (!miembro) miembro = await servidor.members.fetch(discordID);
 
-        for (const rango in datosDiscord.rangos) 
-            if (miembro.roles.cache.has(datosDiscord.rangos[rango])) await miembro.roles.remove(datosDiscord.rangos[rango]);
-    } catch (error) { console.error('Error: Eliminando rango'); throw error; }
+        for (const rango in rangos) 
+            if (miembro.roles.cache.has(rangos[rango])) await miembro.roles.remove(rangos[rango]);
+    } catch (error) { throw error; }
     
     if (rango) {    // asignamos nuevo rango
+        let roleID = rangos[rango];
         try {   
-            let roleID = datosDiscord.rangos[rango];
             await miembro.roles.add(roleID);
-        } catch (error) { console.error("Error: Asignando rango"); throw error; }
+        } catch (error) { throw error; }
     }
 }
 
 module.exports = {
     cambiar_nombre,
-    cambiar_rango
+    cambiar_rango,
+    rango_administrador
 }

@@ -1,10 +1,16 @@
 {
-    "error": "Se ha detectado un problema. Vuelve a intentarlo más tarde.",
+    "error": {
+        "notificar": "Se ha detectado un problema. Vuelve a intentarlo más tarde.",
+        "discord": "[-] Problema con la API de discord.",
+        "data_base": "[-] Problema con la base de datos.",
+        "clashofclans": "[-] Problema con la API de clash of clans."
+    },
 
     "discord": {
         "modificar_nombre_owner": "No se puede cambiar el nombre al owner. Cambialo manualmente.",
         "permisos_insuficientes": "No tienes permisos para ejecutar ese comando.",
         "consultadb_incorrecta": "La consulta realizada es incorrecta.",
+        "ejecuciondb_incorrecta": "La ejecucion realizada es incorrecta.",
         "menu_tabla": "NombreTabla = usuariosCOC\nCampos = discordID tag nombre rango preferenciaGuerra ataquesUltGuerra puntosUltJuegos puntosUltAsaltos totalCapital"
     },
 
@@ -15,7 +21,6 @@
         "tag_ya_vinculado": "El TAG ya se encuentra asignado en otro usuario. Contacte con un moderador.",
         "vinculado_ok": "Se te ha vinculado correctamente a la cuenta de ClashOfClans.",
         "no_vinculado": "No te encuentras vinculado a ninguna cuenta de ClashOfClans.",
-        "desvinculado_ok": "Se te ha desvinculado correctamente de tu cuenta de ClashOfClans.",
-        "vincular_ejemplo": "Ejemplo: /vincular-cuenta #ABCD1234 abcd5678"
+        "desvinculado_ok": "Se te ha desvinculado correctamente de tu cuenta de ClashOfClans."
     }
 }
