@@ -93,11 +93,11 @@ async function actualizarDB() {
                 if (usuarioDBexterno.discordID) await discord.cambiar_rango(usuarioDBexterno.discordID, 'not_member', discord.servidor_id);
             } catch (error) { return console.error(mensajes.error.discord + ` Actualizar rango usuario externo --> ${usuarioDBexterno.tag}.`); }
         }
-    }, 5 *60*1000);
+    }, 2*60*1000);
 }
 
 async function guerra() {
-    console.log(3);
+    
 }
 
 module.exports = {
