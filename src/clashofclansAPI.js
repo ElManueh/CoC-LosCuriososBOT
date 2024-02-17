@@ -47,15 +47,25 @@ async function verificarTokenUsuario(usuarioTag, usuarioTokenApi) {
 
 // Obtener todos los usuarios que pertenecen al clan
 async function obtenerUsuariosClan() {
-  const apiUrl = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/members`
+  const apiUrl = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/members`;
   try {
     const usuarios = await peticionApiGet(apiUrl);
     return usuarios.items;
   } catch (error) { throw error; }
 }
 
+// Obtener datos de la guerra actual
+async function obtenerGuerraActualClan() {
+  const apiUrl = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/currentwar`;
+  try {
+    const guerraActual = await peticionApiGet(apiUrl);
+    return guerraActual;
+  } catch (error) { throw error; }
+}
+
 module.exports = {
   obtenerUsuario,
   verificarTokenUsuario,
-  obtenerUsuariosClan
+  obtenerUsuariosClan,
+  obtenerGuerraActualClan
 }

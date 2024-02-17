@@ -9,14 +9,10 @@ module.exports = {
 
 		try {
 			await eventos.actualizarDB();
-		} catch (error) {
-			console.error('[-] ERROR: ACTUALIZACION DB DETENIDA');
-		}
+		} catch (error) { console.error('[-] ERROR: ACTUALIZACION DB DETENIDA'); }
 
 		try {
-			await eventos.guerra();
-		} catch (error) {
-			console.error('[-] ERROR: TRACKING GUERRA ACTUAL DETENIDO')
-		}
+			await eventos.guerraActual();
+		} catch (error) { console.error('[-] ERROR: TRACKING GUERRA ACTUAL DETENIDO') }
 	},
 };
