@@ -1,8 +1,9 @@
-const axios = require('axios');
-const dotenv = require('dotenv');
-dotenv.config();
+import axios from 'axios';
+import { ClashofclansError } from './errorCreate.js';
+import { config } from 'dotenv';
+config();
 
-// Configuración de la solicitud con la clave de API
+// Configuration API request
 const axiosConfig = {
   headers: {
     'Authorization': `Bearer ${process.env.API_KEY}`,
@@ -10,62 +11,55 @@ const axiosConfig = {
   },
 };
 
-// Solicitud API GET
-async function peticionApiGet(apiUrl) {
+// Get request
+async function requestApiGet(uri) {
   try {
-    const respuestaApi = await axios.get(apiUrl, axiosConfig);
-    return respuestaApi.data;
-  } catch (error) { throw error; }
+    const responseApi = await axios.get(uri, axiosConfig);
+    return responseApi.data;
+  } catch (error) { throw new ClashofclansError(); }
 }
 
-// Solicitud API POST
-async function peticionApiPost(apiUrl, bodyData) {
-  const data = { "token": `${bodyData}` };
+// Post request
+async function requestApiPost(uri, data) {
   try {
-    const respuestaApi = await axios.post(apiUrl, data, axiosConfig);
-    return respuestaApi.data;
-  } catch (error) { throw error; }
+    const responseApi = await axios.post(uri, data, axiosConfig);
+    return responseApi.data;
+  } catch (error) { throw new ClashofclansError(); }
 }
 
-// Obtener información de un usuario
-async function obtenerUsuario(usuarioTag) {
-  const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}`;
+// Get user info
+export async function getUserInfo(userTag) {
+  const uri = `${process.env.LINK_API}/players/${encodeURIComponent(userTag)}`;
   try {
-    const usuario = await peticionApiGet(apiUrl);
-    return usuario;
-  } catch (error) { throw error; }
+    const user = await requestApiGet(uri);
+    return user;
+  } catch (error) { throw new ClashofclansError(); }
 }
 
-// Verificar cuenta de usuario con tokenApi
-async function verificarTokenUsuario(usuarioTag, usuarioTokenApi) {
-  const apiUrl = `${process.env.LINK_API}/players/${encodeURIComponent(usuarioTag)}/verifytoken`;
+// Verify user account with token
+export async function verifyUserToken(userTag, userToken) {
+  const uri = `${process.env.LINK_API}/players/${encodeURIComponent(userTag)}/verifytoken`;
+  const data = { "token": `${userToken}` };
   try {
-    const tokenValido = await peticionApiPost(apiUrl, usuarioTokenApi);
-    return tokenValido.status === 'ok' ? true : false;
-  } catch (error) { throw error; }
+    const tokenInfo = await requestApiPost(uri, data);
+    return tokenInfo.status === 'ok' ? true : false;
+  } catch (error) { throw new ClashofclansError(); }
 }
 
-// Obtener todos los usuarios que pertenecen al clan
-async function obtenerUsuariosClan() {
-  const apiUrl = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/members`;
+// Get users from clan
+export async function getUsersClan() {
+  const uri = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/members`;
   try {
-    const usuarios = await peticionApiGet(apiUrl);
-    return usuarios.items;
-  } catch (error) { throw error; }
+    const users = await requestApiGet(uri);
+    return users.items;
+  } catch (error) { throw new ClashofclansError(); }
 }
 
-// Obtener datos de la guerra actual
-async function obtenerGuerraActualClan() {
-  const apiUrl = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/currentwar`;
+// Get currentWar for clan
+export async function getCurrentWarClan() {
+  const uri = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/currentwar`;
   try {
-    const guerraActual = await peticionApiGet(apiUrl);
-    return guerraActual;
-  } catch (error) { throw error; }
-}
-
-module.exports = {
-  obtenerUsuario,
-  verificarTokenUsuario,
-  obtenerUsuariosClan,
-  obtenerGuerraActualClan
+    const currentWar = await requestApiGet(uri);
+    return currentWar;
+  } catch (error) { throw new ClashofclansError(); }
 }
