@@ -1,9 +1,9 @@
-const clashofclansAPI = require('../src/clashofclansAPI');
-const comandosDB = require('../src/comandosDB');
-const discord = require('../src/discord');
-const mensajes = require('../src/locale.json');
+const clashofclansAPI = require('../clashofclansAPI');
+const comandosDB = require('../comandosDB');
+const discord = require('../discord');
+const mensajes = require('../locale.json');
 
-const resp = require('../test/b.json');
+const resp = require('../../test/b.json');
 
 async function actualizarDB() {
     let solicitudDB = `CREATE TABLE IF NOT EXISTS usuariosCOC (
