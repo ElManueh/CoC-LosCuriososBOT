@@ -1,4 +1,4 @@
-import { DatabaseError } from './errorCreate.js';
+import { DatabaseError } from '../errorCreate.js';
 import sqlite3 from 'sqlite3';
 const db = new sqlite3.Database("./mybotdata.sqlite");
 

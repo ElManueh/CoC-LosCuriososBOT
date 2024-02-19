@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ClashofclansError } from './errorCreate.js';
+import { ClashofclansError } from '../errorCreate.js';
 import { config } from 'dotenv';
 config();
 

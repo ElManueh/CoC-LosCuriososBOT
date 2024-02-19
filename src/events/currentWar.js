@@ -1,5 +1,5 @@
-import { databaseGet, databaseAll, databaseRun } from '../database.js';
-import { getCurrentWarClan } from '../clashofclansAPI.js';
+import { databaseGet, databaseAll, databaseRun } from '../services/database.js';
+import { getCurrentWarClan } from '../services/clashofclansAPI.js';
 import { DatabaseError } from '../errorCreate.js';
 
 async function createTableDB() {
