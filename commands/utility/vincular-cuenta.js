@@ -1,10 +1,10 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const clashofclansAPI = require('../../src/clashofclansAPI.js');
-const comandosDB = require('../../src/comandosDB');
-const discord = require('../../src/discord.js');
-const mensajes = require('../../src/locale.json');
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { getUserInfo, verifyUserToken } from '../../src/services/clashofclansAPI.js';
+import { databaseGet, databaseAll, databaseRun } from '../../src/services/database.js';
+import { discordNameUpdate, discordRoleUpdate } from '../../src/services/discord.js';
+import mensajes from '../../src/locale.json' assert { type: 'json' };
 
-module.exports = {
+export default {
 	category: 'utility',
 	data: new SlashCommandBuilder()
 		.setName('vincular-cuenta')

@@ -1,7 +1,7 @@
-const { Events } = require('discord.js');
-const mensajes = require('../src/locale.json');
+import { Events } from 'discord.js';
+import mensajes from '../src/locale.json' assert { type: 'json' };
 
-module.exports = {
+export default {
 	name: Events.InteractionCreate,
 	async execute(interaction) {
 		if (!interaction.isChatInputCommand()) return;
