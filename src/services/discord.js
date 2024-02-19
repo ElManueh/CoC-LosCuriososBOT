@@ -1,6 +1,6 @@
-const canal_logs = '1198326143846199436';
-const servidor_id = '1198305691375505590';
-const rango_administrador = '1198307374902034432';
+export const discordGuildId = '1198305691375505590';
+export const discordChannelLog = '1198326143846199436';
+export const discordRoleAdmin = '1198307374902034432';
 export const discordRolesClashofclans = {
     'not_member': '1199079285630193674',
     'member': '1198307089391558848',
@@ -9,11 +9,11 @@ export const discordRolesClashofclans = {
     'coLeader': '1198307044621570148',
 };
 
-export async function discordNameUpdate(discordId, name, server) {
+export async function discordNameUpdate(discordId, name, guild) {
     try {
-        let member = server.members.cache.get(discordId);
-        if (!member) member = await server.members.fetch(discordId);
-        if (member.nickname != name && server.ownerId != discordId) await member.setNickname(name);
+        let member = guild.members.cache.get(discordId);
+        if (!member) member = await guild.members.fetch(discordId);
+        if (member.nickname != name && guild.ownerId != discordId) await member.setNickname(name);
     } catch (error) { throw error; }
 }
 

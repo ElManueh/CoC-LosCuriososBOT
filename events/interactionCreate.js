@@ -14,7 +14,10 @@ export default {
 		}
 
 		try {
-			console.log(`[+] ${interaction.user.tag}: ${interaction.commandName}`);
+			let messageLog = `[+] ${interaction.user.tag}: /${interaction.commandName}`;
+			if (interaction.options.data.length !== 0) interaction.options.data.forEach(option => { messageLog += ` [${option.value}]` });
+			console.log(messageLog);
+
 			await command.execute(interaction);
 		} catch (error) {
 			console.error(error);

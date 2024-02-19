@@ -1,5 +1,5 @@
-import { SlashCommandBuilder, codeBlock } from 'discord.js';
-import { databaseGet, databaseAll, databaseRun } from '../../src/services/database.js';
+import { SlashCommandBuilder } from 'discord.js';
+import { databaseRun } from '../../src/services/database.js';
 import mensajes from '../../src/locale.json' assert { type: 'json' };
 
 export default {
@@ -12,15 +12,11 @@ export default {
 			.setDescription('Ejecucion en formato SQL.')
             .setRequired(true)),
 	async execute(interaction) {
-        const solicitudDB = interaction.options.getString('ejecutar');
-
-        // Permisos mios
-        if (interaction.user.id != '219739628196855808') return interaction.reply({ content: mensajes.discord.permisos_insuficientes, ephemeral: true });
-
-        try {   // Solicitud a la DB
-            await comandosDB.ejecutarDBrun(solicitudDB);
-        } catch (error) { return interaction.reply({ content: mensajes.discord.ejecuciondb_incorrecta, ephemeral: true }); }
-
-        await interaction.reply({ content: 'Comando realizado correctamente en la base de datos.', ephemeral: true });
+        try {
+            const databaseRequest = interaction.options.getString('ejecutar');
+            if (interaction.user.id != '219739628196855808') return interaction.reply({ content: mensajes.discord.permisos_insuficientes, ephemeral: true });
+            await databaseRun(databaseRequest);
+            await interaction.reply({ content: 'Comando realizado correctamente en la base de datos.', ephemeral: true });
+        } catch (error) { console.error(error); }
     }
 };
