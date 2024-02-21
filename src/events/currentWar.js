@@ -1,6 +1,5 @@
 import { databaseGet, databaseAll, databaseRun } from '../services/database.js';
 import { getCurrentWarClan } from '../services/clashofclansAPI.js';
-import { DatabaseError } from '../errorCreate.js';
 
 async function createTableDB() {
     let databaseRequest = `CREATE TABLE IF NOT EXISTS guerraCOC (
@@ -19,12 +18,11 @@ async function getWarEnded() {
     try {
         do {
             currentWar = await getCurrentWarClan();
-            // currentWar = resp;
             if (currentWar.state != 'warEnded') await new Promise(resolve => setTimeout(resolve, 30*60*1000));     
         } while (currentWar.state != 'warEnded');
 
         databaseClanTag = await databaseGet('SELECT * FROM guerraCOC');
-        if (currentWar.opponent.tag === databaseClanTag.tagClanEnemigo) return await new Promise(resolve => setTimeout(resolve(), 30*60*1000));
+        if (currentWar.opponent.tag === databaseClanTag.tagClanEnemigo) return await new Promise(resolve => setTimeout(resolve(), 60*60*1000));
         return currentWar;
     } catch (error) { console.error(error); }
 }

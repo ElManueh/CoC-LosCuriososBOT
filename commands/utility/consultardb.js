@@ -30,7 +30,7 @@ export default {
                 response += '\n';
             }
 
-            if (response.length < 2000) return interaction.reply({ content: `${codeBlock(respuesta)}`, ephemeral: true });
+            if (response.length < 2000) return interaction.reply({ content: `${codeBlock(response)}`, ephemeral: true });
 
             await interaction.reply({ content: 'Aqui viene la tabla grande', ephemeral: true });
             response = response.split('\n');
@@ -44,6 +44,9 @@ export default {
                 }
             }
             if (response2.length != 0) await interaction.followUp({ content: codeBlock(response2), ephemeral: true });
-        } catch (error) { console.error(error); }
+        } catch (error) { 
+            await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
+            console.log(error);
+        }
     }
 };

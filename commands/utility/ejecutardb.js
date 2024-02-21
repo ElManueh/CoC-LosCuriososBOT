@@ -17,6 +17,9 @@ export default {
             if (interaction.user.id != '219739628196855808') return interaction.reply({ content: mensajes.discord.permisos_insuficientes, ephemeral: true });
             await databaseRun(databaseRequest);
             await interaction.reply({ content: 'Comando realizado correctamente en la base de datos.', ephemeral: true });
-        } catch (error) { console.error(error); }
+        } catch (error) {
+            await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
+            console.error(error);
+        }
     }
 };

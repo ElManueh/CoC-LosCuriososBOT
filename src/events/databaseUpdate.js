@@ -23,13 +23,7 @@ async function createTableDB() {
 async function getUsersClanData() {
     try {
         let usersClan = await getUsersClan();
-        if (usersClan.length <= 30) usersClan = usersClan.map(user => getUserInfo(user.tag));
-        else {
-            let first30users = usersClan.slice([], 30).map(user => getUserInfo(user.tag));
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            let lastUsers = usersClan.slice(30, ).map(user => getUserInfo(user.tag));
-            usersClan = first30users.concat(lastUsers);
-        }
+        usersClan = usersClan.map(user => getUserInfo(user.tag));
         return await Promise.all(usersClan);
     } catch (error) { console.error(error); }
 }
@@ -78,6 +72,6 @@ export async function databaseUpdate(discordGuild) {
 
             await usersClanUpdate(usersClan, usersDatabase, discordGuild);
             await otherUsersUpdate(usersClan, usersDatabase, discordGuild);
-        }, 1*10*1000)
+        }, 2*60*1000)
     } catch (error) { console.error(error); }
 }

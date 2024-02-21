@@ -55,7 +55,10 @@ export default {
 				.setFooter({ text: `${interaction.user.id}`, iconURL: `${interaction.user.avatarURL()}` });
 		
 			const channel = interaction.guild.channels.cache.get(discordChannelLog);
-			//await channel.send({ embeds: [messageEmbedLog]});
-		} catch (error) { console.error(error); }
+			await channel.send({ embeds: [messageEmbedLog]});
+		} catch (error) {
+			await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
+			console.error(error);
+		}
 	},
 };
