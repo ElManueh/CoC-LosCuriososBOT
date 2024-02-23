@@ -52,11 +52,11 @@ async function otherMembersUpdate(usersWar) {
         let usersNotWar = usersDatabase.filter(user => !usersWar.map(user => user.tag).includes(user.tag));
         for (const userNotWar of usersNotWar) {
             let userDatabase = usersDatabase.filter(user => user.tag === userNotWar.tag);
-            let attacksLog = userDatabase.ataquesUltGuerra;
+            let attacksLog = userDatabase[0].ataquesUltGuerra;
             attacksLog = attacksLog.split(' ');
 
             let attacksCurrentWar = '-';
-            for (let i = 0; i < 4; i++) attacksCurrentWar += `${attacksLog[i]}`;
+            for (let i = 0; i < 4; i++) attacksCurrentWar += ` ${attacksLog[i]}`;
             await databaseRun(`UPDATE usuariosCOC SET ataquesUltGuerra = '${attacksCurrentWar}' WHERE tag = '${userNotWar.tag}'`);
         }
     } catch (error) { console.error(error); }
