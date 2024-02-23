@@ -32,7 +32,10 @@ async function usersClanUpdate(usersClan, usersDatabase, discordGuild) {
     try {
         for (const userClan of usersClan) {
             let userDatabase = usersDatabase.filter(user => user.tag === userClan.tag);
-            if (!userDatabase.length) await databaseRun(`INSERT INTO usuariosCOC (discordID, tag, nombre, rango) VALUES (null, '${userClan.tag}', '${userClan.name}', '${userClan.role}')`);
+            if (!userDatabase.length) {
+                await databaseRun(`INSERT INTO usuariosCOC (discordID, tag, nombre, rango) VALUES (null, '${userClan.tag}', '${userClan.name}', '${userClan.role}')`);
+                continue;
+            }
 
             userDatabase = userDatabase[0];
             if (userDatabase.nombre != userDatabase.name) { // name changed
