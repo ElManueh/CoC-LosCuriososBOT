@@ -3,6 +3,7 @@ import { writeConsoleANDLog } from "../write.js";
 export const discordGuildId = '1198305691375505590';
 export const discordChannelLog = '1198326143846199436';
 export const discordRoleAdmin = '1198307374902034432';
+export const discordOwnerId_elmanueh = '219739628196855808';
 export const discordRolesClashofclans = {
     'not_member': '1199079285630193674',
     'member': '1198307089391558848',
