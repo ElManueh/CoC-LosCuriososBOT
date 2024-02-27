@@ -18,7 +18,7 @@ async function createTableDB() {
 
     try {
         await databaseRun(databaseRequest);
-    } catch (error) { writeConsoleANDLog(error); }
+    } catch (error) { await writeConsoleANDLog(error); }
 }
 
 async function getUsersClanData() {
@@ -26,11 +26,16 @@ async function getUsersClanData() {
         let usersClan = await getUsersClan();
         usersClan = usersClan.map(user => getUserInfo(user.tag));
         return await Promise.all(usersClan);
-    } catch (error) { writeConsoleANDLog(error); }
+    } catch (error) { 
+        await writeConsoleANDLog(error); 
+        await new Promise(resolve => setTimeout(resolve(), 2*60_000));
+        return await getUsersClanData();
+    }
 }
 
 async function usersClanUpdate(usersClan, usersDatabase, discordGuild) {
     try {
+        await databaseRun('BEGIN');
         for (const userClan of usersClan) {
             let userDatabase = usersDatabase.filter(user => user.tag === userClan.tag);
             if (!userDatabase.length) {
@@ -53,18 +58,27 @@ async function usersClanUpdate(usersClan, usersDatabase, discordGuild) {
                 await databaseRun(`UPDATE usuariosCOC SET preferenciaGuerra = '${userClan.warPreference}' WHERE tag = '${userClan.tag}'`);
             }
         }
-    } catch (error) { writeConsoleANDLog(error); }
+        await databaseRun('COMMIT');
+    } catch (error) { 
+        await writeConsoleANDLog(error);
+        await databaseRun('ROLLBACK');
+    }
 }
 
 async function otherUsersUpdate(usersClan, usersDatabase, discordGuild) {
     try {
+        await databaseRun('BEGIN');
         let usersExternalDatabase = usersDatabase.filter(user => !usersClan.map(user => user.tag).includes(user.tag));
         for (const userExternalDatabase of usersExternalDatabase) {
             if (userExternalDatabase.rango === 'not_member') continue;
             await databaseRun(`UPDATE usuariosCOC SET rango = 'not_member' WHERE tag = '${userExternalDatabase.tag}'`);
             if (userExternalDatabase.discordID) await discordRoleUpdate(userExternalDatabase.discordID, 'not_member', discordGuild);
         }
-    } catch (error) { writeConsoleANDLog(error); }
+        await databaseRun('COMMIT');
+    } catch (error) {
+        await writeConsoleANDLog(error);
+        await databaseRun('ROLLBACK');
+    }
 }
 
 export async function databaseUpdate(discordGuild) {
@@ -76,6 +90,6 @@ export async function databaseUpdate(discordGuild) {
 
             await usersClanUpdate(usersClan, usersDatabase, discordGuild);
             await otherUsersUpdate(usersClan, usersDatabase, discordGuild);
-        }, 2*60*1000)
-    } catch (error) { writeConsoleANDLog(error); }
+        }, 2*60_000)
+    } catch (error) { await writeConsoleANDLog(error); }
 }
