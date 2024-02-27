@@ -6,6 +6,7 @@ function getClashOfClansErrorMessage(error) {
     if (codeError === 429) return 'Request was throttled, because amount of requests was above the threshold defined for the used API token.';
     if (codeError === 500) return 'Unknown error happened when handling the request.';
     if (codeError === 503) return 'Service is temprorarily unavailable because of maintenance.';
+    if (codeError === 504) return 'The server did not get a response in time from the upstream server that it needed in order to complete the request.'
 }
 
 export class ClashOfClansError extends Error {
