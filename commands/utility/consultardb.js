@@ -2,6 +2,7 @@ import { SlashCommandBuilder, codeBlock } from 'discord.js';
 import { databaseAll } from '../../src/services/database.js';
 import { discordRoleAdmin } from '../../src/services/discord.js';
 import mensajes from '../../src/locale.json' assert { type: 'json' };
+import { writeConsoleANDLog } from '../../src/write.js';
 
 export default {
     category: 'utility',
@@ -46,7 +47,7 @@ export default {
             if (response2.length != 0) await interaction.followUp({ content: codeBlock(response2), ephemeral: true });
         } catch (error) { 
             await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
-            console.log(error);
+            await writeConsoleANDLog(error);
         }
     }
 };

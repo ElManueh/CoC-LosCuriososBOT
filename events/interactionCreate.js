@@ -1,5 +1,6 @@
 import { Events } from 'discord.js';
 import mensajes from '../src/locale.json' assert { type: 'json' };
+import { writeConsoleANDLog } from '../src/write.js';
 
 function getCurrentDateTime() {
     const now = new Date();
@@ -34,7 +35,7 @@ export default {
 			let messageLog = `${getCurrentDateTime()} [+] ${interaction.user.tag}: /${interaction.commandName}`;
 			if (interaction.options.data.length !== 0) interaction.options.data.forEach(option => { messageLog += ` [${option.value}]` });
 			
-			console.log(messageLog);
+			await writeConsoleANDLog(messageLog);
 			await command.execute(interaction);
 		} catch (error) {
 			console.error(error);

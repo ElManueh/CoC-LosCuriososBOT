@@ -1,5 +1,6 @@
 import { databaseGet, databaseAll, databaseRun } from '../services/database.js';
 import { getCurrentWarClan } from '../services/clashofclansAPI.js';
+import { writeConsoleANDLog } from '../write.js';
 
 async function createTableDB() {
     let databaseRequest = `CREATE TABLE IF NOT EXISTS guerraCOC (
@@ -10,7 +11,7 @@ async function createTableDB() {
         await databaseRun(databaseRequest);
         let databaseResponse = await databaseGet('SELECT * FROM guerraCOC');
         if (!databaseResponse) await databaseRun('INSERT INTO guerraCOC (tagClanEnemigo) VALUES (null)');
-    } catch (error) { console.error(error); }
+    } catch (error) { writeConsoleANDLog(error); }
 }
 
 async function getWarEnded() {
@@ -24,7 +25,7 @@ async function getWarEnded() {
         databaseClanTag = await databaseGet('SELECT * FROM guerraCOC');
         if (currentWar.opponent.tag === databaseClanTag.tagClanEnemigo) return await new Promise(resolve => setTimeout(resolve(), 60*60*1000));
         return currentWar;
-    } catch (error) { console.error(error); }
+    } catch (error) { writeConsoleANDLog(error); }
 }
 
 async function warMembersUpdate(warEnded) {
@@ -43,7 +44,7 @@ async function warMembersUpdate(warEnded) {
     
             await databaseRun(`UPDATE usuariosCOC SET ataquesUltGuerra = '${attacksCurrentWar}' WHERE tag = '${userWar.tag}'`);
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { writeConsoleANDLog(error); }
 }
 
 async function otherMembersUpdate(usersWar) {
@@ -59,7 +60,7 @@ async function otherMembersUpdate(usersWar) {
             for (let i = 0; i < 4; i++) attacksCurrentWar += ` ${attacksLog[i]}`;
             await databaseRun(`UPDATE usuariosCOC SET ataquesUltGuerra = '${attacksCurrentWar}' WHERE tag = '${userNotWar.tag}'`);
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { writeConsoleANDLog(error); }
 }
 
 export async function currentWar() {
@@ -74,5 +75,5 @@ export async function currentWar() {
 
             await databaseRun(`UPDATE guerraCOC SET tagClanEnemigo = '${warEnded.opponent.tag}'`);
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { writeConsoleANDLog(error); }
 }

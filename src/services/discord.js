@@ -1,3 +1,5 @@
+import { writeConsoleANDLog } from "../write.js";
+
 export const discordGuildId = '1198305691375505590';
 export const discordChannelLog = '1198326143846199436';
 export const discordRoleAdmin = '1198307374902034432';
@@ -25,5 +27,5 @@ export async function discordRoleUpdate(discordId, role, server) {
             if (member.roles.cache.has(discordRolesClashofclans[role])) await member.roles.remove(discordRolesClashofclans[role]);
 
         if (role) await member.roles.add(discordRolesClashofclans[role]);
-    } catch (error) { console.error(error); }
+    } catch (error) { writeConsoleANDLog(error); }
 }

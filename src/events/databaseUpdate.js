@@ -1,6 +1,7 @@
 import { databaseAll, databaseRun } from '../services/database.js';
 import { getUsersClan, getUserInfo } from '../services/clashofclansAPI.js';
 import { discordNameUpdate, discordRoleUpdate } from '../services/discord.js';
+import { writeConsoleANDLog } from '../write.js';
 
 async function createTableDB() {
     let databaseRequest = `CREATE TABLE IF NOT EXISTS usuariosCOC (
@@ -17,7 +18,7 @@ async function createTableDB() {
 
     try {
         await databaseRun(databaseRequest);
-    } catch (error) { console.error(error); }
+    } catch (error) { writeConsoleANDLog(error); }
 }
 
 async function getUsersClanData() {
@@ -25,7 +26,7 @@ async function getUsersClanData() {
         let usersClan = await getUsersClan();
         usersClan = usersClan.map(user => getUserInfo(user.tag));
         return await Promise.all(usersClan);
-    } catch (error) { console.error(error); }
+    } catch (error) { writeConsoleANDLog(error); }
 }
 
 async function usersClanUpdate(usersClan, usersDatabase, discordGuild) {
@@ -52,7 +53,7 @@ async function usersClanUpdate(usersClan, usersDatabase, discordGuild) {
                 await databaseRun(`UPDATE usuariosCOC SET preferenciaGuerra = '${userClan.warPreference}' WHERE tag = '${userClan.tag}'`);
             }
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { writeConsoleANDLog(error); }
 }
 
 async function otherUsersUpdate(usersClan, usersDatabase, discordGuild) {
@@ -63,7 +64,7 @@ async function otherUsersUpdate(usersClan, usersDatabase, discordGuild) {
             await databaseRun(`UPDATE usuariosCOC SET rango = 'not_member' WHERE tag = '${userExternalDatabase.tag}'`);
             if (userExternalDatabase.discordID) await discordRoleUpdate(userExternalDatabase.discordID, 'not_member', discordGuild);
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { writeConsoleANDLog(error); }
 }
 
 export async function databaseUpdate(discordGuild) {
@@ -76,5 +77,5 @@ export async function databaseUpdate(discordGuild) {
             await usersClanUpdate(usersClan, usersDatabase, discordGuild);
             await otherUsersUpdate(usersClan, usersDatabase, discordGuild);
         }, 2*60*1000)
-    } catch (error) { console.error(error); }
+    } catch (error) { writeConsoleANDLog(error); }
 }
