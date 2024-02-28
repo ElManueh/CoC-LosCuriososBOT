@@ -23,10 +23,12 @@ export default {
             let databaseResponse = await databaseAll(databaseRequest);
             if (databaseResponse.length === 0) return interaction.reply({ content: 'No hay datos que coincidan con la busqueda.', ephemeral: true });
 
-            let response = '';
+            let response = ' '.repeat(5);
             for (const column in databaseResponse[0]) response += `${column}`.padEnd(20);
             response += '\n\n';
+            let count = 0;
             for (const user of databaseResponse) {
+                response += `${++count}`.padEnd(5);
                 for (const attribute in user) response += `${user[attribute]}`.padEnd(20);
                 response += '\n';
             }
