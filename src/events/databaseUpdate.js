@@ -28,7 +28,7 @@ async function getUsersClanData() {
         return await Promise.all(usersClan);
     } catch (error) { 
         await writeConsoleANDLog(error); 
-        await new Promise(resolve => setTimeout(resolve(), 2*60_000));
+        await new Promise(resolve => setTimeout(resolve, 2*60_000));
         return await getUsersClanData();
     }
 }

@@ -11,7 +11,7 @@ async function createTableDB() {
         await databaseRun(databaseRequest);
         let databaseResponse = await databaseGet('SELECT * FROM guerraCOC');
         if (!databaseResponse) await databaseRun('INSERT INTO guerraCOC (tagClanEnemigo) VALUES (null)');
-    } catch (error) { writeConsoleANDLog(error); }
+    } catch (error) { await writeConsoleANDLog(error); }
 }
 
 async function getWarEnded() {
@@ -19,13 +19,16 @@ async function getWarEnded() {
     try {
         do {
             currentWar = await getCurrentWarClan();
-            if (currentWar.state != 'warEnded') await new Promise(resolve => setTimeout(resolve, 30*60*1000));     
+            if (currentWar.state != 'warEnded') await new Promise(resolve => setTimeout(resolve, 30*60_000));     
         } while (currentWar.state != 'warEnded');
 
         databaseClanTag = await databaseGet('SELECT * FROM guerraCOC');
-        if (currentWar.opponent.tag === databaseClanTag.tagClanEnemigo) return await new Promise(resolve => setTimeout(resolve(), 60*60*1000));
+        if (currentWar.opponent.tag === databaseClanTag.tagClanEnemigo) return await new Promise(resolve => setTimeout(resolve, 60*60_000));
         return currentWar;
-    } catch (error) { writeConsoleANDLog(error); }
+    } catch (error) {
+        await writeConsoleANDLog(error);
+        await new Promise(resolve => setTimeout(resolve, 60_000));
+    }
 }
 
 async function warMembersUpdate(warEnded) {
@@ -44,7 +47,7 @@ async function warMembersUpdate(warEnded) {
     
             await databaseRun(`UPDATE usuariosCOC SET ataquesUltGuerra = '${attacksCurrentWar}' WHERE tag = '${userWar.tag}'`);
         }
-    } catch (error) { writeConsoleANDLog(error); }
+    } catch (error) { await writeConsoleANDLog(error); }
 }
 
 async function otherMembersUpdate(usersWar) {
@@ -60,7 +63,7 @@ async function otherMembersUpdate(usersWar) {
             for (let i = 0; i < 4; i++) attacksCurrentWar += ` ${attacksLog[i]}`;
             await databaseRun(`UPDATE usuariosCOC SET ataquesUltGuerra = '${attacksCurrentWar}' WHERE tag = '${userNotWar.tag}'`);
         }
-    } catch (error) { writeConsoleANDLog(error); }
+    } catch (error) { await writeConsoleANDLog(error); }
 }
 
 export async function currentWar() {
@@ -75,5 +78,5 @@ export async function currentWar() {
 
             await databaseRun(`UPDATE guerraCOC SET tagClanEnemigo = '${warEnded.opponent.tag}'`);
         }
-    } catch (error) { writeConsoleANDLog(error); }
+    } catch (error) { await writeConsoleANDLog(error); }
 }
