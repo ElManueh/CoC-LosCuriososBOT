@@ -22,6 +22,7 @@ export class DatabaseError extends Error {
     constructor (error) {
         super(error.message);
         this.name = 'DATABASE_ERROR';
+        this.code = error.errno;
         this.stack = null;
     }
 }
