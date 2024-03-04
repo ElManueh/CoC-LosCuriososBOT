@@ -66,9 +66,9 @@ export async function createDatabase() {
     const TableUserConnections = `
         CREATE TABLE IF NOT EXISTS UserConnections (
             discordId           TEXT    NOT NULL,
-            playerTag           TEXT    NOT NULL,
-            PRIMARY KEY (discordId, playerTag),
-            CONSTRAINT fk_playerTag FOREIGN KEY (playerTag) REFERENCES PlayerData(tag)
+            player              TEXT    NOT NULL,
+            PRIMARY KEY (discordId, player),
+            CONSTRAINT fk_player FOREIGN KEY (player) REFERENCES PlayerData(tag)
                 ON DELETE CASCADE
                 ON UPDATE CASCADE
         );
@@ -76,15 +76,15 @@ export async function createDatabase() {
     const TableGuildConnections = `
         CREATE TABLE IF NOT EXISTS GuildConnections (
             guildId             TEXT    NOT NULL,
-            clanTag             TEXT    NOT NULL,
+            clan                TEXT    NOT NULL,
             channelLogId        TEXT,
             notMemberRoleId     TEXT,
             memberRoleId        TEXT,
             adminRoleId         TEXT,
             coLeaderRoleId      TEXT,
             leaderRoleId        TEXT,
-            PRIMARY KEY (guildId, clanTag),
-            CONSTRAINT fk_clanTag FOREIGN KEY (clanTag) REFERENCES ClanData(tag)
+            PRIMARY KEY (guildId, clan),
+            CONSTRAINT fk_clan FOREIGN KEY (clan) REFERENCES ClanData(tag)
                 ON DELETE CASCADE
                 ON UPDATE CASCADE
         );
