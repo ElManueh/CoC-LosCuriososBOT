@@ -20,7 +20,7 @@
         "api_incorrecta": "La API proporcionada no es correcta o ya ha caducado.",
         "tag_ya_vinculado": "El TAG ya se encuentra asignado en otro usuario. Contacte con un moderador.",
         "vinculado_ok": "Se te ha vinculado correctamente a la cuenta de ClashOfClans.",
-        "no_vinculado": "No te encuentras vinculado a ninguna cuenta de ClashOfClans.",
+        "no_vinculado": "No te encuentras vinculado a esa cuenta de ClashOfClans.",
         "desvinculado_ok": "Se te ha desvinculado correctamente de tu cuenta de ClashOfClans."
     }
 }
