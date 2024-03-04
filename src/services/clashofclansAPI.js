@@ -39,36 +39,36 @@ async function requestApiPost(uri, data) {
   } catch (error) { throw error; }
 }
 
-// Get user info
-export async function getUserInfo(userTag) {
-  const uri = `${process.env.LINK_API}/players/${encodeURIComponent(userTag)}`;
+// Get player info
+export async function getPlayer(playerTag) {
+  const uri = `${process.env.LINK_API}/players/${encodeURIComponent(playerTag)}`;
   try {
-    const user = await requestApiGet(uri);
-    return user;
+    const player = await requestApiGet(uri);
+    return player;
   } catch (error) { throw new ClashOfClansError(error); }
 }
 
-// Verify user account with token
-export async function verifyUserToken(userTag, userToken) {
-  const uri = `${process.env.LINK_API}/players/${encodeURIComponent(userTag)}/verifytoken`;
-  const data = { "token": `${userToken}` };
+// Verify player account with his token
+export async function verifyPlayerToken(playerTag, playerToken) {
+  const uri = `${process.env.LINK_API}/players/${encodeURIComponent(playerTag)}/verifytoken`;
+  const data = { "token": `${playerToken}` };
   try {
     const tokenInfo = await requestApiPost(uri, data);
     return tokenInfo.status === 'ok' ? true : false;
   } catch (error) { throw new ClashOfClansError(error); }
 }
 
-// Get users from clan
-export async function getUsersClan() {
+// Get clan players
+export async function getClanPlayers() {
   const uri = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/members`;
   try {
-    const users = await requestApiGet(uri);
-    return users.items;
+    const players = await requestApiGet(uri);
+    return players.items;
   } catch (error) { throw new ClashOfClansError(error); }
 }
 
 // Get currentWar for clan
-export async function getCurrentWarClan() {
+export async function getClanCurrentWar() {
   const uri = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/currentwar`;
   try {
     const currentWar = await requestApiGet(uri);

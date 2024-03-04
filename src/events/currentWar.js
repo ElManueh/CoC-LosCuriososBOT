@@ -1,5 +1,5 @@
 import { databaseGet, databaseAll, databaseRun } from '../services/database.js';
-import { getCurrentWarClan } from '../services/clashofclansAPI.js';
+import { getClanCurrentWar } from '../services/clashofclansAPI.js';
 import { writeConsoleANDLog } from '../write.js';
 
 async function createTableDB() {
@@ -18,7 +18,7 @@ async function getWarEnded() {
     let currentWar, databaseClanTag;
     try {
         do {
-            currentWar = await getCurrentWarClan();
+            currentWar = await getClanCurrentWar();
             if (currentWar.state != 'warEnded') await new Promise(resolve => setTimeout(resolve, 30*60_000));     
         } while (currentWar.state != 'warEnded');
 

@@ -25,7 +25,7 @@ export async function databaseRun(solicitudDB) {
     return new Promise((resolve, reject) => {
         db.run(solicitudDB, function(err) {
             if (!err) return resolve(true);
-            return reject(DatabaseError(err));
+            return reject(new DatabaseError(err));
         })
     });
 }

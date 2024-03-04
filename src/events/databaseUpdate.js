@@ -1,5 +1,5 @@
 import { databaseAll, databaseRun } from '../services/database.js';
-import { getUsersClan, getUserInfo } from '../services/clashofclansAPI.js';
+import { getClanPlayers, getPlayer } from '../services/clashofclansAPI.js';
 import { discordNameUpdate, discordRoleUpdate } from '../services/discord.js';
 import { writeConsoleANDLog } from '../write.js';
 
@@ -23,8 +23,8 @@ async function createTableDB() {
 
 async function getUsersClanData() {
     try {
-        let usersClan = await getUsersClan();
-        usersClan = usersClan.map(user => getUserInfo(user.tag));
+        let usersClan = await getClanPlayers();
+        usersClan = usersClan.map(user => getPlayer(user.tag));
         return await Promise.all(usersClan);
     } catch (error) { 
         await writeConsoleANDLog(error); 
