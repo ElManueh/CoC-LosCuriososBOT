@@ -1,9 +1,9 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { getPlayer, verifyPlayerToken } from '../../src/services/clashofclansAPI.js';
-import { databaseAll, databaseRun } from '../../src/services/database.js';
+import { SlashCommandBuilder } from 'discord.js';
+import { getClan } from '../../src/services/clashofclansAPI.js';
+import { databaseGet, databaseRun } from '../../src/services/database.js';
 import mensajes from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
-import { ClashOfClansError, SQLITE_CONSTRAINT_FOREIGNKEY, SQLITE_CONSTRAINT_UNIQUE } from '../../src/errorCreate.js';
+import { ClashOfClansError } from '../../src/errorCreate.js';
 
 export default {
 	category: 'utility',
@@ -16,12 +16,18 @@ export default {
 			.setRequired(true)),
 	async execute(interaction) {
 		try {
-            /*
-                - comprobar que el tag se esta trackeando en ese clan
-                - SI:   desvinculo el clan
-                - NO:   mensaje de error
-            */
+			let optionClanTag = interaction.options.getString('clan-tag');
+			let clan = await getClan(optionClanTag);
+
+			let query = await databaseGet(`SELECT * FROM GuildConnections WHERE guildId = '${interaction.guild.id}' AND clan = '${clan.tag}'`);
+			if (!query) return await interaction.reply({ content: 'el clan no esta vinculado a este servidor', ephemeral: true });
+
+			await databaseRun(`DELETE FROM GuildConnections WHERE guildId = '${interaction.guild.id}' AND clan = '${clan.tag}'`);
+			await interaction.reply({ content: 'se ha desvinculado el clan X de este servidor', ephemeral: true });
 		} catch (error) {
+			if (error instanceof ClashOfClansError) {
+				if (error.errno === 404) return await interaction.reply({ content: 'Tag incorrecto', ephemeral: true });
+			}
 			await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
 			await writeConsoleANDLog(error);
 		}
