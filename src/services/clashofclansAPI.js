@@ -48,6 +48,15 @@ export async function getPlayer(playerTag) {
   } catch (error) { throw new ClashOfClansError(error); }
 }
 
+// Get clan info
+export async function getClan(clanTag) {
+  const uri = `${process.env.LINK_API}/clans/${encodeURIComponent(clanTag)}`;
+  try {
+    const clan = await requestApiGet(uri);
+    return clan;
+  } catch (error) { throw new ClashOfClansError(error); }
+}
+
 // Verify player account with his token
 export async function verifyPlayerToken(playerTag, playerToken) {
   const uri = `${process.env.LINK_API}/players/${encodeURIComponent(playerTag)}/verifytoken`;
