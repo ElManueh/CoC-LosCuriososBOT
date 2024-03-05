@@ -21,13 +21,14 @@ export default {
 
 			await databaseRun('BEGIN');
 			try {
-				await databaseRun(`INSERT INTO GuildConnections VALUES ('${interaction.guild.id}', '${clan.tag}')`);
+				await databaseRun(`INSERT INTO GuildConnections (guildId, clan) VALUES ('${interaction.guild.id}', '${clan.tag}')`);
 			} catch (error) {
+				
 				if (error instanceof DatabaseError) {
 					if (error.code === SQLITE_CONSTRAINT_UNIQUE) return await interaction.reply({ content: mensajes.clashofclans.tag_ya_vinculado, ephemeral: true });
 					if (error.code === SQLITE_CONSTRAINT_FOREIGNKEY) {	// clan no creado
-						await databaseRun(`INSERT INTO ClanData VALUES ('${clan.tag}')`);
-						await databaseRun(`INSERT INTO GuildConnections VALUES ('${interaction.guild.id}', '${clan.tag}')`);
+						await databaseRun(`INSERT INTO ClanData (tag) VALUES ('${clan.tag}')`);
+						await databaseRun(`INSERT INTO GuildConnections (guildId, clan) VALUES ('${interaction.guild.id}', '${clan.tag}')`);
 					}
 				}
 			}
