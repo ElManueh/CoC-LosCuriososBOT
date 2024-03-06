@@ -20,7 +20,7 @@ export default {
 		// This execute the code to manage the database update with information about wars.
 		currentWar();
 		// This execute the code to manage the update of users clan.
-		databaseUpdate(client.guilds.cache.get(discordGuildId));
+		databaseUpdate();
 		// Initialize limit rate of api coc.
 		RequestCountClashOfClansCreate();
 	},

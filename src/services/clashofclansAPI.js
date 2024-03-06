@@ -68,8 +68,8 @@ export async function verifyPlayerToken(playerTag, playerToken) {
 }
 
 // Get clan players
-export async function getClanPlayers() {
-  const uri = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/members`;
+export async function getClanPlayers(clan) {
+  const uri = `${process.env.LINK_API}/clans/${encodeURIComponent(clan)}/members`;
   try {
     const players = await requestApiGet(uri);
     return players.items;
