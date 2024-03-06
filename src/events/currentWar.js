@@ -1,82 +1,76 @@
 import { databaseGet, databaseAll, databaseRun } from '../services/database.js';
 import { getClanCurrentWar } from '../services/clashofclansAPI.js';
 import { writeConsoleANDLog } from '../write.js';
+const WAR_ENDED = 'warEnded';
 
-async function createTableDB() {
-    let databaseRequest = `CREATE TABLE IF NOT EXISTS guerraCOC (
-        tagClanEnemigo		TEXT 		UNIQUE
-        )`;
-
-    try { 
-        await databaseRun(databaseRequest);
-        let databaseResponse = await databaseGet('SELECT * FROM guerraCOC');
-        if (!databaseResponse) await databaseRun('INSERT INTO guerraCOC (tagClanEnemigo) VALUES (null)');
-    } catch (error) { await writeConsoleANDLog(error); }
-}
-
-async function getWarEnded() {
-    let currentWar, databaseClanTag;
+async function getWarEnded(clan) {
     try {
-        do {
-            currentWar = await getClanCurrentWar();
-            if (currentWar.state != 'warEnded') await new Promise(resolve => setTimeout(resolve, 30*60_000));     
-        } while (currentWar.state != 'warEnded');
-
-        databaseClanTag = await databaseGet('SELECT * FROM guerraCOC');
-        if (currentWar.opponent.tag === databaseClanTag.tagClanEnemigo) return await new Promise(resolve => setTimeout(resolve, 60*60_000));
-        return currentWar;
+        let currentWar = await getClanCurrentWar(clan);
+        if (currentWar.state !== WAR_ENDED) return;
+        
+        let clanData = await databaseGet(`SELECT * FROM ClanData WHERE tag = '${clan}'`);
+        return currentWar.opponent.tag !== clanData.lastWar ? currentWar : null;  
     } catch (error) {
         await writeConsoleANDLog(error);
-        await new Promise(resolve => setTimeout(resolve, 60_000));
     }
 }
 
-async function warMembersUpdate(warEnded) {
-    let usersWar = warEnded.clan.members;
+async function addNewAttack(playerClan, lastAttack) {
     try {
-        for (const userWar of usersWar) {
-            let stars = 0;
-            if (userWar.attacks) for (const attack of userWar.attacks) stars += attack.stars;
-    
-            let userDatabase = await databaseGet(`SELECT * FROM usuariosCOC WHERE tag = '${userWar.tag}'`);
-            let attacksLog = userDatabase.ataquesUltGuerra;
-            attacksLog = attacksLog.split(' ');
-    
-            let attacksCurrentWar = userWar.attacks ? `${userWar.attacks.length}[${stars}]` : '0[0]';
-            for (let i = 0; i < 4; i++) attacksCurrentWar += ` ${attacksLog[i]}`;
-    
-            await databaseRun(`UPDATE usuariosCOC SET ataquesUltGuerra = '${attacksCurrentWar}' WHERE tag = '${userWar.tag}'`);
+        let playerAttacks = playerClan.warAttacks.split(' ');
+        for (let i = 0; i < 4; i++) {
+            lastAttack += ` ${playerAttacks[i]}`;
         }
-    } catch (error) { await writeConsoleANDLog(error); }
+        await databaseRun(`UPDATE PlayerClanData SET warAttacks = '${lastAttack}' WHERE clan = '${playerClan.clan}' AND player = '${playerClan.player}'`);
+    } catch (error) {
+        await writeConsoleANDLog(error);
+    }
 }
 
-async function otherMembersUpdate(usersWar) {
+async function warPlayersUpdate(warEnded) {
+    let warPlayers = warEnded.clan.members;
     try {
-        let usersDatabase = await databaseAll('SELECT * FROM usuariosCOC');
-        let usersNotWar = usersDatabase.filter(user => !usersWar.map(user => user.tag).includes(user.tag));
-        for (const userNotWar of usersNotWar) {
-            let userDatabase = usersDatabase.filter(user => user.tag === userNotWar.tag);
-            let attacksLog = userDatabase[0].ataquesUltGuerra;
-            attacksLog = attacksLog.split(' ');
+        for (const warPlayer of warPlayers) {
+            let stars = 0;
+            if (warPlayer.attacks) for (const attack of warPlayer.attacks) stars += attack.stars;
 
-            let attacksCurrentWar = '-';
-            for (let i = 0; i < 4; i++) attacksCurrentWar += ` ${attacksLog[i]}`;
-            await databaseRun(`UPDATE usuariosCOC SET ataquesUltGuerra = '${attacksCurrentWar}' WHERE tag = '${userNotWar.tag}'`);
+            let playerClan = await databaseGet(`SELECT * FROM PlayerClanData WHERE clan = '${warEnded.clan.tag}' AND player = '${warPlayer.tag}'`);
+            let lastAttack = warPlayer.attacks ? `${warPlayer.attacks.length}[${stars}]` : '0[0]';
+            await addNewAttack(playerClan, lastAttack);
         }
-    } catch (error) { await writeConsoleANDLog(error); }
+    } catch (error) {
+        await writeConsoleANDLog(error);
+    }
+}
+
+async function otherPlayersUpdate(warEnded) {
+    try {
+        let warPlayers = warEnded.clan.members;
+        let playersClan = await databaseAll(`SELECT * FROM PlayerClanData WHERE clan = '${warEnded.clan.tag}'`);
+        let notWarPlayers = playersClan.filter(playerClan => !warPlayers.map(player => player.tag).includes(playerClan.player));
+        for (const notWarPlayer of notWarPlayers) {
+            await addNewAttack(notWarPlayer, '-');
+        }
+    } catch (error) {
+        await writeConsoleANDLog(error);
+    }
 }
 
 export async function currentWar() {
     try {
-        await createTableDB();
-        while (true) {
-            let warEnded = await getWarEnded();
-            if (!warEnded) continue;
+        setInterval(async () => {
+            let connections = await databaseAll(`SELECT * FROM GuildConnections`);
+            for (const connection of connections) {
+                let warEnded = await getWarEnded(connection.clan);
+                if (!warEnded) continue;
 
-            await warMembersUpdate(warEnded);
-            await otherMembersUpdate(warEnded.clan.members);
+                await warPlayersUpdate(warEnded);
+                await otherPlayersUpdate(warEnded);
 
-            await databaseRun(`UPDATE guerraCOC SET tagClanEnemigo = '${warEnded.opponent.tag}'`);
-        }
-    } catch (error) { await writeConsoleANDLog(error); }
+                await databaseRun(`UPDATE ClanData SET lastWar = '${warEnded.opponent.tag}' WHERE tag = '${connection.clan}'`);
+            }
+        }, 5*60_000);
+    } catch (error) { 
+        await writeConsoleANDLog(error);
+    }
 }

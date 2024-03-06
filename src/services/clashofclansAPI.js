@@ -77,8 +77,8 @@ export async function getClanPlayers(clan) {
 }
 
 // Get currentWar for clan
-export async function getClanCurrentWar() {
-  const uri = `${process.env.LINK_API}/clans/${encodeURIComponent(process.env.CLAN_TAG)}/currentwar`;
+export async function getClanCurrentWar(clan) {
+  const uri = `${process.env.LINK_API}/clans/${encodeURIComponent(clan)}/currentwar`;
   try {
     const currentWar = await requestApiGet(uri);
     return currentWar;
