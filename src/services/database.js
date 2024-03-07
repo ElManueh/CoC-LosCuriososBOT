@@ -4,11 +4,12 @@ import { writeConsoleANDLog } from '../write.js';
 
 // Create new connection with the database
 export async function openConnectionDatabase() {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         const connection = new sqlite3.Database('./mybotdata.sqlite', (err) => {
             if (!err) return resolve(connection);
             return reject(new DatabaseError(err));
         });
+        await runDatabase(connection, 'PRAGMA foreign_keys = 1');
     });
 }
 
@@ -22,33 +23,37 @@ export async function closeConnectionDatabase(connection) {
     });
 }
 
-export async function databaseGet(solicitudDB) {
+// Get one row in the database
+export async function getDatabase(connection, request) {
     return new Promise((resolve, reject) => {
-        db.get(solicitudDB, (err, row) => {
+        connection.get(request, (err, row) => {
             if (!err) return resolve(row);
             return reject(new DatabaseError(err));
         });
     });
 }
 
-export async function databaseAll(solicitudDB) {
+// Get all the rows in the database
+export async function allDatabase(connection, request) {
     return new Promise((resolve, reject) => {
-        db.all(solicitudDB, (err, rows) => {
+        connection.all(request, (err, rows) => {
             if (!err) return resolve(rows);
             return reject(new DatabaseError(err));
         });
     });
 }
 
-export async function databaseRun(solicitudDB) {
+// Execute a command in the database
+export async function runDatabase(connection, request) {
     return new Promise((resolve, reject) => {
-        db.run(solicitudDB, function(err) {
+        connection.run(request, function(err) {
             if (!err) return resolve(true);
             return reject(new DatabaseError(err));
         })
     });
 }
 
+// Create all the tables for the database
 export async function createDatabase() {
     const TablePlayerData = `
         CREATE TABLE IF NOT EXISTS PlayerData (
@@ -109,17 +114,19 @@ export async function createDatabase() {
         );
     `;
 
+    const db = await openConnectionDatabase();
     try {
-        await databaseRun('PRAGMA foreign_keys = ON');
-        await databaseRun('BEGIN');
-        await databaseRun(TablePlayerData);
-        await databaseRun(TableClanData);
-        await databaseRun(TablePlayerClanData);
-        await databaseRun(TableUserConnections);
-        await databaseRun(TableGuildConnections);
-        await databaseRun('COMMIT');
+        await runDatabase(db, 'BEGIN');
+        await runDatabase(db, TablePlayerData);
+        await runDatabase(db, TableClanData);
+        await runDatabase(db, TablePlayerClanData);
+        await runDatabase(db, TableUserConnections);
+        await runDatabase(db, TableGuildConnections);
+        await runDatabase(db, 'COMMIT');
+        await closeConnectionDatabase(db);
     } catch (error) {
-        await databaseRun('ROLLBACK');
+        await runDatabase('ROLLBACK');
+        await closeConnectionDatabase(db);
         await writeConsoleANDLog(error);
         throw error;
     }

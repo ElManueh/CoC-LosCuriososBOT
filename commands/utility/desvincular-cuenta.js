@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { databaseAll, databaseGet, databaseRun } from '../../src/services/database.js';
+import { allDatabase, closeConnectionDatabase, getDatabase, openConnectionDatabase, runDatabase } from '../../src/services/database.js';
 import mensajes from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
 
@@ -14,14 +14,15 @@ export default {
 			.setRequired(true)),
     async execute(interaction) {
         const optionPlayerTag = interaction.options.getString('player-tag');
+		const db = await openConnectionDatabase();
         try {
-            let connections = await databaseAll(`SELECT * FROM UserConnections WHERE discordId = '${interaction.user.id}' AND player = '${optionPlayerTag}'`);
+            let connections = await allDatabase(db, `SELECT * FROM UserConnections WHERE discordId = '${interaction.user.id}' AND player = '${optionPlayerTag}'`);
             if (!connections.length) return await interaction.reply({ content: mensajes.clashofclans.no_vinculado, ephemeral: true });
             
-            await databaseRun(`DELETE FROM UserConnections WHERE discordId = '${interaction.user.id}' AND player = '${optionPlayerTag}'`);
+            await runDatabase(db, `DELETE FROM UserConnections WHERE discordId = '${interaction.user.id}' AND player = '${optionPlayerTag}'`);
             await interaction.reply({ content: mensajes.clashofclans.desvinculado_ok, ephemeral: true });    
 
-            const player = await databaseGet(`SELECT * FROM PlayerData WHERE tag = '${optionPlayerTag}'`);
+            const player = await getDatabase(db, `SELECT * FROM PlayerData WHERE tag = '${optionPlayerTag}'`);
             const messageEmbedLog = new EmbedBuilder()
 				.setColor(0xFF0000)
 				.addFields(
@@ -32,7 +33,7 @@ export default {
 				.setTimestamp()
 				.setFooter({ text: `${interaction.user.id}`, iconURL: `${interaction.user.avatarURL()}` });
 
-			let clanConnecteds = await databaseAll(`SELECT * FROM GuildConnections WHERE clan = '${player.tag}'`);
+			let clanConnecteds = await allDatabase(db, `SELECT * FROM GuildConnections WHERE clan = '${player.tag}'`);
 			for (const connection of clanConnecteds) {
 				if (!connection.channelLogId) continue;
 				
@@ -43,7 +44,9 @@ export default {
 
 				await channel.send({ embeds: [messageEmbedLog] });
 			}
+			await closeConnectionDatabase(db);
         } catch (error) {
+			await closeConnectionDatabase(db);
             await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
             await writeConsoleANDLog(error);
         }

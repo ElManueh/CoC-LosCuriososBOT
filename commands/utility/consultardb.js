@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, codeBlock } from 'discord.js';
-import { databaseAll } from '../../src/services/database.js';
+import { allDatabase, closeConnectionDatabase, openConnectionDatabase } from '../../src/services/database.js';
 import { discordRoleAdmin } from '../../src/services/discord.js';
 import mensajes from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
@@ -13,6 +13,7 @@ export default {
             .setName('consulta')
             .setDescription('Consulta en formato SQL.')),
     async execute(interaction) {
+        const db = await openConnectionDatabase();
         try {
             const databaseRequest = interaction.options.getString('consulta');
             let member = interaction.guild.members.cache.get(interaction.user.id);
@@ -20,7 +21,7 @@ export default {
             if (!member.roles.cache.has(discordRoleAdmin)) return interaction.reply({ content: mensajes.discord.permisos_insuficientes, ephemeral: true });
 
             if (!databaseRequest) return interaction.reply({ content: mensajes.discord.menu_tabla, ephemeral: true });
-            let databaseResponse = await databaseAll(databaseRequest);
+            let databaseResponse = await allDatabase(db, databaseRequest);
             if (databaseResponse.length === 0) return interaction.reply({ content: 'No hay datos que coincidan con la busqueda.', ephemeral: true });
 
             let response = ' '.repeat(5);
@@ -47,7 +48,9 @@ export default {
                 }
             }
             if (response2.length != 0) await interaction.followUp({ content: codeBlock(response2), ephemeral: true });
+            await closeConnectionDatabase(db);
         } catch (error) { 
+            await closeConnectionDatabase(db);
             await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
             await writeConsoleANDLog(error);
         }
