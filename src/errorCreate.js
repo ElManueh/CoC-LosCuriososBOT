@@ -19,8 +19,11 @@ export class ClashOfClansError extends Error {
 }
 
 const SQLITE_CONSTRAINT = 19;
+const SQLITE_BUSY = 5;
 export const SQLITE_CONSTRAINT_FOREIGNKEY = 'SQLITE_CONSTRAINT_FOREIGNKEY';
 export const SQLITE_CONSTRAINT_UNIQUE = 'SQLITE_CONSTRAINT_UNIQUE';
+export const SQLITE_BUSY_TIMEOUT = 'SQLITE_BUSY_TIMEOUT';
+export const SQLITE_ERROR = 'SQLITE_ERROR';
 
 function getDatabaseError(error) {
     let errno = error.errno;
@@ -32,8 +35,10 @@ function getDatabaseError(error) {
             } else if (message.indexOf('UNIQUE') !== -1) {
                 return SQLITE_CONSTRAINT_UNIQUE;
             }
+        case SQLITE_BUSY:
+            return SQLITE_BUSY_TIMEOUT;
         default:
-            return 'SQLITE_ERROR';
+            return SQLITE_ERROR;
     }
 }
 
