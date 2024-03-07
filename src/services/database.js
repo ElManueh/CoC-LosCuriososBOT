@@ -1,7 +1,26 @@
 import sqlite3 from 'sqlite3';
 import { DatabaseError } from '../errorCreate.js';
 import { writeConsoleANDLog } from '../write.js';
-const db = new sqlite3.Database('./mybotdata.sqlite');
+
+// Create new connection with the database
+export async function openConnectionDatabase() {
+    return new Promise((resolve, reject) => {
+        const connection = new sqlite3.Database('./mybotdata.sqlite', (err) => {
+            if (!err) return resolve(connection);
+            return reject(new DatabaseError(err));
+        });
+    });
+}
+
+// Close existing connection with the database
+export async function closeConnectionDatabase(connection) {
+    return new Promise((resolve, reject) => {
+        connection.close((err) => {
+            if (!err) return resolve();
+            return reject(new DatabaseError(err));
+        });
+    });
+}
 
 export async function databaseGet(solicitudDB) {
     return new Promise((resolve, reject) => {
