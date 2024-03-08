@@ -4,6 +4,16 @@ import { discordRoleAdmin } from '../../src/services/discord.js';
 import mensajes from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
 
+const columnPadding = new Map([
+    ['index', 5],
+    ['name', 17],
+    ['player', 13],
+    ['role', 12],
+    ['townHall', 11],
+    ['warAttacks', 27],
+    ['warPreference', 16]
+]);
+
 export default {
     category: 'utility',
     data: new SlashCommandBuilder()
@@ -30,14 +40,13 @@ export default {
             await runDatabase(db, query);
             let databaseResponse = await allDatabase(db, databaseRequest);
             if (databaseResponse.length === 0) return interaction.reply({ content: 'No hay datos que coincidan con la busqueda.', ephemeral: true });
-
-            let response = ' '.repeat(5);
-            for (const column in databaseResponse[0]) response += `${column}`.padEnd(20);
+            let response = ' '.repeat(columnPadding.get('index'));
+            for (const column in databaseResponse[0]) response += `${column}`.padEnd(columnPadding.get(`${column}`));
             response += '\n\n';
             let count = 0;
             for (const user of databaseResponse) {
-                response += `${++count}`.padEnd(5);
-                for (const attribute in user) response += `${user[attribute]}`.padEnd(20);
+                response += `${++count}`.padEnd(columnPadding.get('index'));
+                for (const attribute in user) response += `${user[attribute]}`.padEnd(columnPadding.get(`${attribute}`));
                 response += '\n';
             }
 
