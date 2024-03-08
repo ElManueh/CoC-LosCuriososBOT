@@ -4,6 +4,7 @@ import mensajes from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
 
 const MAX_LENGTH_DISCORD_MESSAGE = 2000;
+const COLUMN_PADDING_DEFAULT = 20;
 const columnPadding = new Map([
     ['index', 5],
     ['name', 17],
@@ -16,13 +17,13 @@ const columnPadding = new Map([
 
 async function mountDataTable(replyDatabase) {
     let responseTable = ' '.repeat(columnPadding.get('index'));
-    for (const column in replyDatabase[0]) responseTable += `${column}`.padEnd(columnPadding.get(`${column}`));
+    for (const column in replyDatabase[0]) responseTable += `${column}`.padEnd(columnPadding.get(`${column}`) || COLUMN_PADDING_DEFAULT);
     responseTable += '\n\n';
     
     let countRow = 0;
     for (const user of replyDatabase) {
         responseTable += `${++countRow}`.padEnd(columnPadding.get('index'));
-        for (const attribute in user) responseTable += `${user[attribute]}`.padEnd(columnPadding.get(`${attribute}`));
+        for (const attribute in user) responseTable += `${user[attribute]}`.padEnd(columnPadding.get(`${attribute}`) || COLUMN_PADDING_DEFAULT);
         responseTable += '\n';
     }
     return responseTable;
