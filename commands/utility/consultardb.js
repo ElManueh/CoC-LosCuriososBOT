@@ -74,12 +74,11 @@ export default {
 
             await interaction.reply({ content: 'Loading information', ephemeral: true });
             await displayDataTable(responseTable, interaction);
-
-            await closeConnectionDatabase(db);
         } catch (error) { 
-            await closeConnectionDatabase(db);
             await writeConsoleANDLog(error);
             await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
+        } finally {
+            await closeConnectionDatabase(db);
         }
     }
 };
