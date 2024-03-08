@@ -64,7 +64,8 @@ export default {
             const query = ` CREATE TEMPORARY VIEW ${tableName} AS
                                 SELECT ${tableParameters}
                                 FROM PlayerClanData
-                                INNER JOIN PlayerData ON PlayerClanData.player = PlayerData.tag`;
+                                INNER JOIN PlayerData ON PlayerClanData.player = PlayerData.tag
+                                WHERE role != 'not_member'`;
             await runDatabase(db, query);
             const replyDatabase = await allDatabase(db, queryDatabase);
             if (!replyDatabase.length) return interaction.reply({ content: 'No hay datos que coincidan con la busqueda.', ephemeral: true });
