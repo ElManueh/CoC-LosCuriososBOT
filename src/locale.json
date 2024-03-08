@@ -10,8 +10,7 @@
         "modificar_nombre_owner": "No se puede cambiar el nombre al owner. Cambialo manualmente.",
         "permisos_insuficientes": "No tienes permisos para ejecutar ese comando.",
         "consultadb_incorrecta": "La consulta realizada es incorrecta.",
-        "ejecuciondb_incorrecta": "La ejecucion realizada es incorrecta.",
-        "menu_tabla": "NombreTabla = usuariosCOC\nCampos = discordID tag nombre rango preferenciaGuerra ataquesUltGuerra puntosUltJuegos puntosUltAsaltos totalCapital"
+        "ejecuciondb_incorrecta": "La ejecucion realizada es incorrecta."
     },
 
     "clashofclans": {

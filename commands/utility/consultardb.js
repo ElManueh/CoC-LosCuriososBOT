@@ -1,18 +1,45 @@
 import { SlashCommandBuilder, codeBlock } from 'discord.js';
 import { allDatabase, closeConnectionDatabase, openConnectionDatabase, runDatabase } from '../../src/services/database.js';
-import { discordRoleAdmin } from '../../src/services/discord.js';
 import mensajes from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
 
+const MAX_LENGTH_DISCORD_MESSAGE = 2000;
 const columnPadding = new Map([
     ['index', 5],
     ['name', 17],
     ['player', 13],
-    ['role', 12],
+    ['role', 13],
     ['townHall', 11],
     ['warAttacks', 27],
     ['warPreference', 16]
 ]);
+
+async function mountDataTable(replyDatabase) {
+    let responseTable = ' '.repeat(columnPadding.get('index'));
+    for (const column in replyDatabase[0]) responseTable += `${column}`.padEnd(columnPadding.get(`${column}`));
+    responseTable += '\n\n';
+    
+    let countRow = 0;
+    for (const user of replyDatabase) {
+        responseTable += `${++countRow}`.padEnd(columnPadding.get('index'));
+        for (const attribute in user) responseTable += `${user[attribute]}`.padEnd(columnPadding.get(`${attribute}`));
+        responseTable += '\n';
+    }
+    return responseTable;
+}
+
+async function displayDataTable(responseTable, interaction) {
+    responseTable = responseTable.split('\n');
+    let tableSegment = "";
+    for (const row of responseTable) {
+        if (tableSegment.length + row.length < MAX_LENGTH_DISCORD_MESSAGE) tableSegment += row + '\n';
+        else {
+            await interaction.followUp({ content: codeBlock(tableSegment), ephemeral: true });
+            tableSegment = row + '\n';
+        }
+    }
+    if (tableSegment.length) await interaction.followUp({ content: codeBlock(tableSegment), ephemeral: true });
+}
 
 export default {
     category: 'utility',
@@ -25,45 +52,28 @@ export default {
     async execute(interaction) {
         const db = await openConnectionDatabase();
         try {
-            const databaseRequest = interaction.options.getString('consulta');
-            let member = interaction.guild.members.cache.get(interaction.user.id);
-            if (!member) member = await interaction.guild.members.fetch(interaction.user.id);
-            if (!member.roles.cache.has(discordRoleAdmin)) return interaction.reply({ content: mensajes.discord.permisos_insuficientes, ephemeral: true });
-
-            if (!databaseRequest) return interaction.reply({ content: mensajes.discord.menu_tabla, ephemeral: true });
-            const nameView = 'vista';
-            const query = ` CREATE TEMPORARY VIEW ${nameView} 
-                            AS
-                            SELECT player, name, role, townHall, warPreference, warAttacks
-                            FROM PlayerClanData
-                            INNER JOIN PlayerData ON PlayerClanData.player = PlayerData.tag`;
-            await runDatabase(db, query);
-            let databaseResponse = await allDatabase(db, databaseRequest);
-            if (databaseResponse.length === 0) return interaction.reply({ content: 'No hay datos que coincidan con la busqueda.', ephemeral: true });
-            let response = ' '.repeat(columnPadding.get('index'));
-            for (const column in databaseResponse[0]) response += `${column}`.padEnd(columnPadding.get(`${column}`));
-            response += '\n\n';
-            let count = 0;
-            for (const user of databaseResponse) {
-                response += `${++count}`.padEnd(columnPadding.get('index'));
-                for (const attribute in user) response += `${user[attribute]}`.padEnd(columnPadding.get(`${attribute}`));
-                response += '\n';
-            }
-
-            if (response.length < 2000) return interaction.reply({ content: `${codeBlock(response)}`, ephemeral: true });
-
-            await interaction.reply({ content: 'Aqui viene la tabla grande', ephemeral: true });
-            response = response.split('\n');
+            const tableName = 'vista';
+            const tableParameters = 'player, name, role, townHall, warPreference, warAttacks';
             
-            let response2 = "";
-            for (const line of response) {
-                if (response2.length + line.length < 2000) response2 += line + '\n';
-                else {
-                    await interaction.followUp({ content: codeBlock(response2), ephemeral: true });
-                    response2 = line + '\n';
-                }
-            }
-            if (response2.length != 0) await interaction.followUp({ content: codeBlock(response2), ephemeral: true });
+            const queryDatabase = interaction.options.getString('consulta');
+            if (!queryDatabase) return interaction.reply({ content: `TableName: ${tableName}\nParameters: ${tableParameters}`, ephemeral: true });
+            
+            // aqui comprobar que solo se acceda a la vista y no a otras tablas (a no ser que sea yo)
+            
+            const query = ` CREATE TEMPORARY VIEW ${tableName} AS
+                                SELECT ${tableParameters}
+                                FROM PlayerClanData
+                                INNER JOIN PlayerData ON PlayerClanData.player = PlayerData.tag`;
+            await runDatabase(db, query);
+            const replyDatabase = await allDatabase(db, queryDatabase);
+            if (!replyDatabase.length) return interaction.reply({ content: 'No hay datos que coincidan con la busqueda.', ephemeral: true });
+            
+            const responseTable = await mountDataTable(replyDatabase);
+            if (responseTable.length < MAX_LENGTH_DISCORD_MESSAGE) return interaction.reply({ content: `${codeBlock(responseTable)}`, ephemeral: true });
+
+            await interaction.reply({ content: 'Loading information', ephemeral: true });
+            await displayDataTable(responseTable, interaction);
+
             await closeConnectionDatabase(db);
         } catch (error) { 
             await closeConnectionDatabase(db);
