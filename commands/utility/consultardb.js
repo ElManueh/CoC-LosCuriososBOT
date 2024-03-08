@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, codeBlock } from 'discord.js';
-import { allDatabase, closeConnectionDatabase, openConnectionDatabase } from '../../src/services/database.js';
+import { allDatabase, closeConnectionDatabase, openConnectionDatabase, runDatabase } from '../../src/services/database.js';
 import { discordRoleAdmin } from '../../src/services/discord.js';
 import mensajes from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
@@ -21,6 +21,13 @@ export default {
             if (!member.roles.cache.has(discordRoleAdmin)) return interaction.reply({ content: mensajes.discord.permisos_insuficientes, ephemeral: true });
 
             if (!databaseRequest) return interaction.reply({ content: mensajes.discord.menu_tabla, ephemeral: true });
+            const nameView = 'vista';
+            const query = ` CREATE TEMPORARY VIEW ${nameView} 
+                            AS
+                            SELECT player, name, role, townHall, warPreference, warAttacks
+                            FROM PlayerClanData
+                            INNER JOIN PlayerData ON PlayerClanData.player = PlayerData.tag`;
+            await runDatabase(db, query);
             let databaseResponse = await allDatabase(db, databaseRequest);
             if (databaseResponse.length === 0) return interaction.reply({ content: 'No hay datos que coincidan con la busqueda.', ephemeral: true });
 
@@ -51,8 +58,8 @@ export default {
             await closeConnectionDatabase(db);
         } catch (error) { 
             await closeConnectionDatabase(db);
-            await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
             await writeConsoleANDLog(error);
+            await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
         }
     }
 };
