@@ -20,19 +20,22 @@ export default {
 			let optionClanTag = interaction.options.getString('clan-tag');
 			let clan = await getClan(optionClanTag);
 
-			let query = await getDatabase(db, `SELECT * FROM GuildConnections WHERE guildId = '${interaction.guild.id}' AND clan = '${clan.tag}'`);
-			if (!query) return await interaction.reply({ content: 'el clan no esta vinculado a este servidor', ephemeral: true });
+			await runDatabase(db, 'BEGIN IMMEDIATE');
+			let queryDatabase = await getDatabase(db, `SELECT * FROM GuildConnections WHERE guildId = '${interaction.guild.id}' AND clan = '${clan.tag}'`);
+			if (!queryDatabase) return interaction.reply({ content: 'el clan no esta vinculado a este servidor', ephemeral: true });
 
 			await runDatabase(db, `DELETE FROM GuildConnections WHERE guildId = '${interaction.guild.id}' AND clan = '${clan.tag}'`);
 			await interaction.reply({ content: 'se ha desvinculado el clan X de este servidor', ephemeral: true });
-			await closeConnectionDatabase(db);
+			await runDatabase(db, 'COMMIT');
 		} catch (error) {
-			await closeConnectionDatabase(db);
+			await runDatabase(db, 'ROLLBACK');
+			await writeConsoleANDLog(error);
 			if (error instanceof ClashOfClansError) {
-				if (error.errno === 404) return await interaction.reply({ content: 'Tag incorrecto', ephemeral: true });
+				if (error.errno === 404) return interaction.reply({ content: 'Tag incorrecto', ephemeral: true });
 			}
 			await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
-			await writeConsoleANDLog(error);
+		} finally {
+			await closeConnectionDatabase(db);
 		}
 	},
 };
