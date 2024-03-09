@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { allDatabase, closeConnectionDatabase, getDatabase, openConnectionDatabase, runDatabase } from '../../src/services/database.js';
-import mensajes from '../../src/locale.json' assert { type: 'json' };
+import localeJSON from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
 
 export default {
@@ -17,10 +17,10 @@ export default {
 		const db = await openConnectionDatabase();
         try {
             let connections = await allDatabase(db, `SELECT * FROM UserConnections WHERE discordId = '${interaction.user.id}' AND player = '${optionPlayerTag}'`);
-            if (!connections.length) return await interaction.reply({ content: mensajes.clashofclans.no_vinculado, ephemeral: true });
+            if (!connections.length) return await interaction.reply({ content: localeJSON.clashofclans_account_unlinked_fail, ephemeral: true });
             
             await runDatabase(db, `DELETE FROM UserConnections WHERE discordId = '${interaction.user.id}' AND player = '${optionPlayerTag}'`);
-            await interaction.reply({ content: mensajes.clashofclans.desvinculado_ok, ephemeral: true });    
+            await interaction.reply({ content: localeJSON.clashofclans_account_unlinked_ok, ephemeral: true });    
 
             const player = await getDatabase(db, `SELECT * FROM PlayerData WHERE tag = '${optionPlayerTag}'`);
             const messageEmbedLog = new EmbedBuilder()
@@ -47,7 +47,7 @@ export default {
 			await closeConnectionDatabase(db);
         } catch (error) {
 			await closeConnectionDatabase(db);
-            await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
+            await interaction.reply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
             await writeConsoleANDLog(error);
         }
     }

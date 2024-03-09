@@ -1,25 +1,26 @@
 {
-    "error": {
-        "notificar": "Se ha detectado un problema. Vuelve a intentarlo más tarde.",
-        "discord": "[-] Problema con la API de discord.",
-        "data_base": "[-] Problema con la base de datos.",
-        "clashofclans": "[-] Problema con la API de clash of clans."
-    },
-
-    "discord": {
-        "modificar_nombre_owner": "No se puede cambiar el nombre al owner. Cambialo manualmente.",
-        "permisos_insuficientes": "No tienes permisos para ejecutar ese comando.",
-        "consultadb_incorrecta": "La consulta realizada es incorrecta.",
-        "ejecuciondb_incorrecta": "La ejecucion realizada es incorrecta."
-    },
-
-    "clashofclans": {
-        "discord_ya_vinculado": "Tu cuenta de Discord se encuentra vinculada ya a una cuenta de ClashOfClans.\nDesvinculate de la anterior antes de volver a vincularte a otra cuenta.",
-        "tag_incorrecto": "El TAG proporcionado no existe.",
-        "api_incorrecta": "La API proporcionada no es correcta o ya ha caducado.",
-        "tag_ya_vinculado": "El TAG ya se encuentra asignado en otro usuario. Contacte con un moderador.",
-        "vinculado_ok": "Se te ha vinculado correctamente a la cuenta de ClashOfClans.",
-        "no_vinculado": "No te encuentras vinculado a esa cuenta de ClashOfClans.",
-        "desvinculado_ok": "Se te ha desvinculado correctamente de tu cuenta de ClashOfClans."
-    }
+    "clashofclans_account_linked_fail": "Your Discord account is already linked to ClashOfClans.",
+    "clashofclans_account_linked_ok": "Your Discord account has been successfully linked to ClashOfClans.",
+    "clashofclans_account_unlinked_fail": "You are not linked to that ClashOfClans account.",
+    "clashofclans_account_unlinked_ok": "You have been successfully unlinked from your ClashOfClans account.",
+    "clashofclans_clan_tracked_fail": "The clan is already tracked on this server.",
+    "clashofclans_clan_tracked_ok": "The clan has been successfully tracked to the server. Remember to configure it to have access to the different features.",
+    "clashofclans_clan_untracked_fail": "The clan is not tracked on this server.",
+    "clashofclans_clan_untracked_ok": "The clan has been successfully untracked on this server.",
+    "clashofclans_tag_incorrect": "The TAG provided does not exist.",
+    "clashofclans_token_incorrect": "The token provided is incorrect or has already expired.",
+    
+    "database_confirmation": "Are you sure you want to apply the changes? (30 sec)",
+    "database_confirmation_ok": "Command DONE successfully on the database.",
+    "database_confirmation_fail": "Command REVERTED successfully in the database.",
+    "database_loading_data": "Loading data that matches the search.",
+    "database_result_not_found": "No results were found related to your query.",
+    
+    "discord_modify_owner_name": "The server owner cannot be renamed. You have to change it manually.",
+    "discord_permission_insufficient": "You do not have permissions to run that command.",
+    
+    "error_clashofclansAPI": "ClashOfClansAPI error detected.",
+    "error_databaseAPI": "DatabaseAPI error detected.",
+    "error_discordAPI": "DiscordAPI error detected.",
+    "error_notify_in_discord": "A problem has been detected. Try again later."
 }

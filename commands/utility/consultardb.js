@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, codeBlock } from 'discord.js';
 import { allDatabase, closeConnectionDatabase, openConnectionDatabase, runDatabase } from '../../src/services/database.js';
-import mensajes from '../../src/locale.json' assert { type: 'json' };
+import localeJSON from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
 
 const MAX_LENGTH_DISCORD_MESSAGE = 2000;
@@ -68,16 +68,16 @@ export default {
                                 WHERE role != 'not_member'`;
             await runDatabase(db, query);
             const replyDatabase = await allDatabase(db, queryDatabase);
-            if (!replyDatabase.length) return interaction.reply({ content: 'No hay datos que coincidan con la busqueda.', ephemeral: true });
+            if (!replyDatabase.length) return interaction.reply({ content: localeJSON.database_result_not_found, ephemeral: true });
             
             const responseTable = await mountDataTable(replyDatabase);
             if (responseTable.length < MAX_LENGTH_DISCORD_MESSAGE) return interaction.reply({ content: `${codeBlock(responseTable)}`, ephemeral: true });
 
-            await interaction.reply({ content: 'Loading information', ephemeral: true });
+            await interaction.reply({ content: localeJSON.database_loading_data, ephemeral: true });
             await displayDataTable(responseTable, interaction);
         } catch (error) { 
             await writeConsoleANDLog(error);
-            await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
+            await interaction.reply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
         } finally {
             await closeConnectionDatabase(db);
         }

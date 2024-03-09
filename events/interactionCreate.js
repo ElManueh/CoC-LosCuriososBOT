@@ -1,5 +1,5 @@
 import { Events } from 'discord.js';
-import mensajes from '../src/locale.json' assert { type: 'json' };
+import localeJSON from '../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../src/write.js';
 
 function getCurrentDateTime() {
@@ -40,9 +40,9 @@ export default {
 		} catch (error) {
 			console.error(error);
 			if (interaction.replied || interaction.deferred) {
-				await interaction.followUp({ content: mensajes.error.notificar, ephemeral: true });
+				await interaction.followUp({ content: localeJSON.error_notify_in_discord, ephemeral: true });
 			} else {
-				await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
+				await interaction.reply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
 			}
 		}
 	},

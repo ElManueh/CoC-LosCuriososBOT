@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { getPlayer, verifyPlayerToken } from '../../src/services/clashofclansAPI.js';
 import { allDatabase, closeConnectionDatabase, openConnectionDatabase, runDatabase } from '../../src/services/database.js';
-import mensajes from '../../src/locale.json' assert { type: 'json' };
+import localeJSON from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
 import { ClashOfClansError, SQLITE_CONSTRAINT_FOREIGNKEY, SQLITE_CONSTRAINT_UNIQUE } from '../../src/errorCreate.js';
 
@@ -26,20 +26,20 @@ export default {
 
 			let playerClan = await getPlayer(optionPlayerTag);
 			let tokenVerified = await verifyPlayerToken(optionPlayerTag, optionPlayerToken);
-			if (!tokenVerified) return interaction.reply({ content: mensajes.clashofclans.api_incorrecta, ephemeral: true });
+			if (!tokenVerified) return interaction.reply({ content: localeJSON.clashofclans_token_incorrect, ephemeral: true });
 
 			await runDatabase(db, 'BEGIN');
 			try {
 				await runDatabase(db, `INSERT INTO UserConnections VALUES ('${interaction.user.id}', '${playerClan.tag}')`);
 			} catch (error) {
-				if (error.code === SQLITE_CONSTRAINT_UNIQUE) return await interaction.reply({ content: mensajes.clashofclans.tag_ya_vinculado, ephemeral: true });
+				if (error.code === SQLITE_CONSTRAINT_UNIQUE) return await interaction.reply({ content: localeJSON.clashofclans_account_linked_fail, ephemeral: true });
 				if (error.code === SQLITE_CONSTRAINT_FOREIGNKEY) {
 					await runDatabase(db, `INSERT INTO PlayerData VALUES ('${playerClan.tag}', '${playerClan.name}', '${playerClan.townHallLevel}', '${playerClan.warPreference}')`);
 					await runDatabase(db, `INSERT INTO UserConnections VALUES ('${interaction.user.id}', '${playerClan.tag}')`);
 				}
 			}
 			await runDatabase(db, 'COMMIT');
-			await interaction.reply({ content: mensajes.clashofclans.vinculado_ok, ephemeral: true });
+			await interaction.reply({ content: localeJSON.clashofclans_account_linked_ok, ephemeral: true });
 
 			const messageEmbedLog = new EmbedBuilder()
 				.setColor(0x00FF00)
@@ -66,9 +66,9 @@ export default {
 		} catch (error) {
 			await closeConnectionDatabase(db);
 			if (error instanceof ClashOfClansError) {
-				if (error.errno === 404) return await interaction.reply({ content: mensajes.clashofclans.tag_incorrecto, ephemeral: true });
+				if (error.errno === 404) return await interaction.reply({ content: localeJSON.clashofclans_tag_incorrect, ephemeral: true });
 			}
-			await interaction.reply({ content: mensajes.error.notificar, ephemeral: true });
+			await interaction.reply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
 			await writeConsoleANDLog(error);
 		}
 	},
