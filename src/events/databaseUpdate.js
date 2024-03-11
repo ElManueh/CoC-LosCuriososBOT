@@ -19,13 +19,18 @@ async function playersClanUpdate(db, playersClan, playersDatabase) {
     try {
         await runDatabase(db, 'BEGIN');
         for (const playerClan of playersClan) {
+            const lootCapitalT = playerClan.achievements.filter(achievement => achievement.name === 'Aggressive Capitalism')[0];
+            const addCapitalT = playerClan.achievements.filter(achievement => achievement.name === 'Most Valuable Clanmate')[0];
+            const clanGamesT = playerClan.achievements.filter(achievement => achievement.name === 'Games Champion')[0];
             let playerDatabase = playersDatabase.filter(player => player.tag === playerClan.tag);
             try {
                 await runDatabase(db, `INSERT INTO PlayerClanData (clan, player, role) VALUES ('${playerClan.clan.tag}', '${playerClan.tag}', '${playerClan.role}')`);
             } catch (error) {
                 if (error instanceof DatabaseError) {
                     if (error.code === SQLITE_CONSTRAINT_FOREIGNKEY) {  // player dont exists
-                        await runDatabase(db, `INSERT INTO PlayerData (tag, name, townHall, warPreference) VALUES ('${playerClan.tag}', '${playerClan.name}', '${playerClan.townHallLevel}', '${playerClan.warPreference}')`);
+                        await runDatabase(db, ` INSERT INTO PlayerData (tag, name, townHall, warPreference, lootCapitalT, addCapitalT, clanGamesT)
+                                                VALUES ('${playerClan.tag}', '${playerClan.name}', '${playerClan.townHallLevel}', '${playerClan.warPreference}',
+                                                        '${lootCapitalT.value}', '${addCapitalT.value}', '${clanGamesT.value}')`);
                         await runDatabase(db, `INSERT INTO PlayerClanData (clan, player, role) VALUES ('${playerClan.clan.tag}', '${playerClan.tag}', '${playerClan.role}')`);
                         continue;
                     }
@@ -49,6 +54,28 @@ async function playersClanUpdate(db, playersClan, playersDatabase) {
 
             if (playerDatabase.warPreference !== playerClan.warPreference) { // warPreference changed
                 await runDatabase(db, `UPDATE PlayerData SET warPreference = '${playerClan.warPreference}' WHERE tag = '${playerClan.tag}'`);
+            }
+
+            if (playerDatabase.lootCapitalT !== lootCapitalT.value) { // lootCapitalT changed
+                const lootCapitalNew = lootCapitalT.value - playerDatabase.lootCapitalT;
+                const lootCapitalOld = await getDatabase(db, `SELECT * FROM PlayerClanData WHERE clan = '${playerClan.clan.tag}' AND player = '${playerClan.tag}'`);
+                await runDatabase(db, `UPDATE PlayerClanData SET lootCapital = '${lootCapitalNew + lootCapitalOld.lootCapital}' WHERE clan = '${playerClan.clan.tag}' AND player = '${playerClan.tag}'`);
+                await runDatabase(db, `UPDATE PlayerData SET lootCapitalT = '${lootCapitalT.value}' WHERE tag = '${playerClan.tag}'`);
+
+            }
+
+            if (playerDatabase.addCapitalT !== addCapitalT.value) { // addCapitalT changed
+                const addCapitalNew = addCapitalT.value - playerDatabase.addCapitalT;
+                const addCapitalOld = await getDatabase(db, `SELECT * FROM PlayerClanData WHERE clan = '${playerClan.clan.tag}' AND player = '${playerClan.tag}'`);
+                await runDatabase(db, `UPDATE PlayerClanData SET addCapital = '${addCapitalNew + addCapitalOld.addCapital}' WHERE clan = '${playerClan.clan.tag}' AND player = '${playerClan.tag}'`);
+                await runDatabase(db, `UPDATE PlayerData SET addCapitalT = '${addCapitalT.value}' WHERE tag = '${playerClan.tag}'`);
+            }
+
+            if (playerDatabase.clanGamesT !== clanGamesT.value) { // clanGamesT changed
+                const clanGamesNew = clanGamesT.value - playerDatabase.clanGamesT;
+                const clanGamesOld = await getDatabase(db, `SELECT * FROM PlayerClanData WHERE clan = '${playerClan.clan.tag}' AND player = '${playerClan.tag}'`);
+                await runDatabase(db, `UPDATE PlayerClanData SET clanGames = '${clanGamesNew + clanGamesOld.clanGames}' WHERE clan = '${playerClan.clan.tag}' AND player = '${playerClan.tag}'`);
+                await runDatabase(db, `UPDATE PlayerData SET clanGamesT = '${clanGamesT.value}' WHERE tag = '${playerClan.tag}'`);
             }
         }
         await runDatabase(db, 'COMMIT');

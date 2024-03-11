@@ -6,7 +6,10 @@ import { writeConsoleANDLog } from '../../src/write.js';
 const MAX_LENGTH_DISCORD_MESSAGE = 2000;
 const COLUMN_PADDING_DEFAULT = 20;
 const columnPadding = new Map([
+    ['addCapital', 13],
+    ['clanGames', 12],
     ['index', 5],
+    ['lootCapital', 14],
     ['name', 17],
     ['player', 13],
     ['role', 13],
@@ -54,7 +57,7 @@ export default {
         const db = await openConnectionDatabase();
         try {
             const tableName = 'vista';
-            const tableParameters = 'player, name, role, townHall, warPreference, warAttacks';
+            const tableParameters = 'player, name, role, townHall, lootCapital, addCapital, clanGames, warPreference, warAttacks';
             
             const queryDatabase = interaction.options.getString('consulta');
             if (!queryDatabase) return interaction.reply({ content: `TableName: ${tableName}\nParameters: ${tableParameters}`, ephemeral: true });

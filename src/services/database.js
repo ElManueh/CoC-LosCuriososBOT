@@ -59,8 +59,11 @@ export async function createDatabase() {
         CREATE TABLE IF NOT EXISTS PlayerData (
             tag                 TEXT    NOT NULL,
             name                TEXT    NOT NULL,
-            townHall            TEXT    NOT NULL,
+            townHall            INTEGER NOT NULL,
             warPreference       TEXT    NOT NULL,
+            lootCapitalT        INTEGER NOT NULL,
+            addCapitalT         INTEGER NOT NULL,
+            clanGamesT          INTEGER NOT NULL,
             PRIMARY KEY (tag)
         );
     `;
@@ -77,6 +80,9 @@ export async function createDatabase() {
             clan                TEXT    NOT NULL,
             player              TEXT 	NOT NULL,
             role                TEXT    NOT NULL,
+            lootCapital         INTEGER NOT NULL    DEFAULT 0,
+            addCapital          INTEGER NOT NULL    DEFAULT 0,
+            clanGames           INTEGER NOT NULL    DEFAULT 0,
             warAttacks          TEXT 	NOT NULL    DEFAULT '- - - - -',
             PRIMARY KEY (clan, player),
             CONSTRAINT fk_clan FOREIGN KEY (clan) REFERENCES ClanData(tag)
