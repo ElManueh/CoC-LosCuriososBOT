@@ -45,6 +45,12 @@ async function displayDataTable(responseTable, interaction) {
     if (tableSegment.length) await interaction.followUp({ content: codeBlock(tableSegment), ephemeral: true });
 }
 
+async function checkQuery(queryDatabase) {
+    queryDatabase = queryDatabase.toLowerCase();
+    const allowedPattern = /^\s*select\b/i;
+    if (!allowedPattern.test(queryDatabase)) throw new Error('query not allowed');
+}
+
 export default {
     category: 'utility',
     data: new SlashCommandBuilder()
@@ -61,9 +67,9 @@ export default {
             
             const queryDatabase = interaction.options.getString('consulta');
             if (!queryDatabase) return interaction.reply({ content: `TableName: ${tableName}\nParameters: ${tableParameters}`, ephemeral: true });
+            await checkQuery(queryDatabase);
             
             // aqui comprobar que solo se acceda a la vista y no a otras tablas (a no ser que sea yo)
-            
             const query = ` CREATE TEMPORARY VIEW ${tableName} AS
                                 SELECT ${tableParameters}
                                 FROM PlayerClanData
