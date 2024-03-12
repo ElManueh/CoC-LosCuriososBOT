@@ -1,86 +1,81 @@
-import axios from 'axios';
-import { ClashOfClansError } from '../errorCreate.js';
-import { config } from 'dotenv';
-config();
+import { AxiosAdapter } from './axios-adapter.js';
 
-let requestCount = 0;
-export async function RequestCountClashOfClansCreate() {
-  setInterval(() => { requestCount = 0 }, 1000);
-}
+export class ClashOfClansAPI {
+  static #INSTANCE = null;
+  static #REQUEST_COUNT = 0;
+  static #MAX_LIMIT_REQUEST = 30;
+  static #LINK_API = 'https://api.clashofclans.com/v1';
 
-async function RequestCount() {
-  while (requestCount >= 30) await new Promise(resolve => setTimeout(resolve, 1000));
-  requestCount++;
-}
+  constructor() {
+    if (ClashOfClansAPI.#INSTANCE === null) {
+      ClashOfClansAPI.#INSTANCE = this;
+      setInterval(() => { ClashOfClansAPI.#REQUEST_COUNT = 0; }, 1000);
+    }
+    return ClashOfClansAPI.#INSTANCE;
+  }
 
-// Configuration API request
-const axiosConfig = {
-  headers: {
-    'Authorization': `Bearer ${process.env.API_KEY}`,
-    'Accept': 'application/json',
-  },
-};
+  static getInstance() {
+    return new ClashOfClansAPI();
+  }
 
-// Get request
-async function requestApiGet(uri) {
-  try {
-    await RequestCount();
-    const responseApi = await axios.get(uri, axiosConfig);
-    return responseApi.data;
-  } catch (error) { throw error; }
-}
+  // METHODS
+  
+  // Count the request for prevent MAX_LIMIT_REQUEST
+  async #RequestCount() {
+    while (ClashOfClansAPI.#REQUEST_COUNT >= ClashOfClansAPI.#MAX_LIMIT_REQUEST) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    ClashOfClansAPI.#REQUEST_COUNT++;
+  }
 
-// Post request
-async function requestApiPost(uri, data) {
-  try {
-    await RequestCount();
-    const responseApi = await axios.post(uri, data, axiosConfig);
-    return responseApi.data;
-  } catch (error) { throw error; }
-}
+  // Get player info
+  async getPlayer(playerTag) {
+    const uri = `${ClashOfClansAPI.#LINK_API}/players/${encodeURIComponent(playerTag)}`;
+    try {
+      await this.#RequestCount();
+      const player = await AxiosAdapter.getInstance().requestApiGet(uri);
+      return player;
+    } catch (error) { throw new ClashOfClansError(error); }
+  }
 
-// Get player info
-export async function getPlayer(playerTag) {
-  const uri = `${process.env.LINK_API}/players/${encodeURIComponent(playerTag)}`;
-  try {
-    const player = await requestApiGet(uri);
-    return player;
-  } catch (error) { throw new ClashOfClansError(error); }
-}
+  // Get clan info
+  async getClan(clanTag) { 
+    const uri = `${ClashOfClansAPI.#LINK_API}/clans/${encodeURIComponent(clanTag)}`;
+    try {
+      await this.#RequestCount();
+      const clan = await AxiosAdapter.getInstance().requestApiGet(uri);
+      return clan;
+    } catch (error) { throw new ClashOfClansError(error); }
+  }
 
-// Get clan info
-export async function getClan(clanTag) {
-  const uri = `${process.env.LINK_API}/clans/${encodeURIComponent(clanTag)}`;
-  try {
-    const clan = await requestApiGet(uri);
-    return clan;
-  } catch (error) { throw new ClashOfClansError(error); }
-}
+  // Verify player account with his token
+  async verifyPlayerToken(playerTag, playerToken) {
+    const uri = `${ClashOfClansAPI.#LINK_API}/players/${encodeURIComponent(playerTag)}/verifytoken`;
+    const data = { "token": `${playerToken}` };
+    try {
+      await this.#RequestCount();
+      const tokenInfo = await AxiosAdapter.getInstance().requestApiPost(uri, data);
+      return tokenInfo.status === 'ok' ? true : false;
+    } catch (error) { throw new ClashOfClansError(error); }
+  }
 
-// Verify player account with his token
-export async function verifyPlayerToken(playerTag, playerToken) {
-  const uri = `${process.env.LINK_API}/players/${encodeURIComponent(playerTag)}/verifytoken`;
-  const data = { "token": `${playerToken}` };
-  try {
-    const tokenInfo = await requestApiPost(uri, data);
-    return tokenInfo.status === 'ok' ? true : false;
-  } catch (error) { throw new ClashOfClansError(error); }
-}
+  // Get clan players
+  async getClanPlayers(clan) {
+    const uri = `${ClashOfClansAPI.#LINK_API}/clans/${encodeURIComponent(clan)}/members`;
+    try {
+      await this.#RequestCount();
+      const players = await AxiosAdapter.getInstance().requestApiGet(uri);
+      return players.items;
+    } catch (error) { throw new ClashOfClansError(error); }
+  }
 
-// Get clan players
-export async function getClanPlayers(clan) {
-  const uri = `${process.env.LINK_API}/clans/${encodeURIComponent(clan)}/members`;
-  try {
-    const players = await requestApiGet(uri);
-    return players.items;
-  } catch (error) { throw new ClashOfClansError(error); }
-}
-
-// Get currentWar for clan
-export async function getClanCurrentWar(clan) {
-  const uri = `${process.env.LINK_API}/clans/${encodeURIComponent(clan)}/currentwar`;
-  try {
-    const currentWar = await requestApiGet(uri);
-    return currentWar;
-  } catch (error) { throw new ClashOfClansError(error); }
+  // Get currentWar for clan
+  async getClanCurrentWar(clan) {
+    const uri = `${ClashOfClansAPI.#LINK_API}/clans/${encodeURIComponent(clan)}/currentwar`;
+    try {
+      await this.#RequestCount();
+      const currentWar = await AxiosAdapter.getInstance().requestApiGet(uri);
+      return currentWar;
+    } catch (error) { throw new ClashOfClansError(error); }
+  }
 }
