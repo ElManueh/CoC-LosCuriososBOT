@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, codeBlock } from 'discord.js';
-import { allDatabase, closeConnectionDatabase, openConnectionDatabase, runDatabase } from '../../src/services/database.js';
+import * as Database from '../../src/services/database.js';
 import localeJSON from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
 
@@ -60,7 +60,7 @@ export default {
             .setName('consulta')
             .setDescription('Consulta en formato SQL.')),
     async execute(interaction) {
-        const db = await openConnectionDatabase();
+        const db = await Database.openConnection();
         try {
             const tableName = 'vista';
             const tableParameters = 'player, name, role, townHall, lootCapital, addCapital, clanGames, warPreference, warAttacks';
@@ -75,8 +75,8 @@ export default {
                                 FROM PlayerClanData
                                 INNER JOIN PlayerData ON PlayerClanData.player = PlayerData.tag
                                 WHERE role != 'not_member'`;
-            await runDatabase(db, query);
-            const replyDatabase = await allDatabase(db, queryDatabase);
+            await Database.runCommand(db, query);
+            const replyDatabase = await Database.getMultipleRow(db, queryDatabase);
             if (!replyDatabase.length) return interaction.reply({ content: localeJSON.database_result_not_found, ephemeral: true });
             
             const responseTable = await mountDataTable(replyDatabase);
@@ -88,7 +88,7 @@ export default {
             await writeConsoleANDLog(error);
             await interaction.reply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
         } finally {
-            await closeConnectionDatabase(db);
+            await Database.closeConnection(db);
         }
     }
 };

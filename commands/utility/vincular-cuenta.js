@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { getPlayer, verifyPlayerToken } from '../../src/services/clashofclansAPI.js';
-import { allDatabase, closeConnectionDatabase, openConnectionDatabase, runDatabase } from '../../src/services/database.js';
+import * as ClashofClansAPI from '../../src/services/clashofclansAPI.js';
+import * as Database from '../../src/services/database.js';
 import localeJSON from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
 import { ClashOfClansError, SQLITE_CONSTRAINT_FOREIGNKEY, SQLITE_CONSTRAINT_UNIQUE } from '../../src/errorCreate.js';
@@ -19,26 +19,26 @@ export default {
 			.setDescription('Este es el codigo API de tu cuenta de Clash Of Clans.')
 			.setRequired(true)),
 	async execute(interaction) {
-		const db = await openConnectionDatabase();
+		const db = await Database.openConnection();
 		try {
 			const optionPlayerTag = interaction.options.getString('usuario-tag');
 			const optionPlayerToken = interaction.options.getString('codigo-api');
 
-			let playerClan = await getPlayer(optionPlayerTag);
-			let tokenVerified = await verifyPlayerToken(optionPlayerTag, optionPlayerToken);
+			let playerClan = await ClashofClansAPI.getPlayer(optionPlayerTag);
+			let tokenVerified = await ClashofClansAPI.verifyPlayerToken(optionPlayerTag, optionPlayerToken);
 			if (!tokenVerified) return interaction.reply({ content: localeJSON.clashofclans_token_incorrect, ephemeral: true });
 
-			await runDatabase(db, 'BEGIN');
+			await Database.runCommand(db, 'BEGIN');
 			try {
-				await runDatabase(db, `INSERT INTO UserConnections VALUES ('${interaction.user.id}', '${playerClan.tag}')`);
+				await Database.runCommand(db, `INSERT INTO UserConnections VALUES ('${interaction.user.id}', '${playerClan.tag}')`);
 			} catch (error) {
 				if (error.code === SQLITE_CONSTRAINT_UNIQUE) return await interaction.reply({ content: localeJSON.clashofclans_account_linked_fail, ephemeral: true });
 				if (error.code === SQLITE_CONSTRAINT_FOREIGNKEY) {
-					await runDatabase(db, `INSERT INTO PlayerData VALUES ('${playerClan.tag}', '${playerClan.name}', '${playerClan.townHallLevel}', '${playerClan.warPreference}')`);
-					await runDatabase(db, `INSERT INTO UserConnections VALUES ('${interaction.user.id}', '${playerClan.tag}')`);
+					await Database.runCommand(db, `INSERT INTO PlayerData VALUES ('${playerClan.tag}', '${playerClan.name}', '${playerClan.townHallLevel}', '${playerClan.warPreference}')`);
+					await Database.runCommand(db, `INSERT INTO UserConnections VALUES ('${interaction.user.id}', '${playerClan.tag}')`);
 				}
 			}
-			await runDatabase(db, 'COMMIT');
+			await Database.runCommand(db, 'COMMIT');
 			await interaction.reply({ content: localeJSON.clashofclans_account_linked_ok, ephemeral: true });
 
 			const messageEmbedLog = new EmbedBuilder()
@@ -51,7 +51,7 @@ export default {
 				.setTimestamp()
 				.setFooter({ text: `${interaction.user.id}`, iconURL: `${interaction.user.avatarURL()}` });
 
-			let clanConnecteds = await allDatabase(db, `SELECT * FROM GuildConnections WHERE clan = '${playerClan.tag}'`);
+			let clanConnecteds = await Database.getMultipleRow(db, `SELECT * FROM GuildConnections WHERE clan = '${playerClan.tag}'`);
 			for (const connection of clanConnecteds) {
 				if (!connection.channelLogId) continue;
 				
@@ -62,9 +62,9 @@ export default {
 
 				await channel.send({ embeds: [messageEmbedLog] });
 			}
-			await closeConnectionDatabase(db);
+			await Database.closeConnection(db);
 		} catch (error) {
-			await closeConnectionDatabase(db);
+			await Database.closeConnection(db);
 			if (error instanceof ClashOfClansError) {
 				if (error.errno === 404) return await interaction.reply({ content: localeJSON.clashofclans_tag_incorrect, ephemeral: true });
 			}

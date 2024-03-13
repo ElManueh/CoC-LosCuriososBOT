@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { allDatabase, closeConnectionDatabase, getDatabase, openConnectionDatabase, runDatabase } from '../../src/services/database.js';
+import * as Database from '../../src/services/database.js';
 import localeJSON from '../../src/locale.json' assert { type: 'json' };
 import { writeConsoleANDLog } from '../../src/write.js';
 
@@ -14,15 +14,15 @@ export default {
 			.setRequired(true)),
     async execute(interaction) {
         const optionPlayerTag = interaction.options.getString('player-tag');
-		const db = await openConnectionDatabase();
+		const db = await Database.openConnection();
         try {
-            let connections = await allDatabase(db, `SELECT * FROM UserConnections WHERE discordId = '${interaction.user.id}' AND player = '${optionPlayerTag}'`);
+            let connections = await Database.getMultipleRow(db, `SELECT * FROM UserConnections WHERE discordId = '${interaction.user.id}' AND player = '${optionPlayerTag}'`);
             if (!connections.length) return await interaction.reply({ content: localeJSON.clashofclans_account_unlinked_fail, ephemeral: true });
             
-            await runDatabase(db, `DELETE FROM UserConnections WHERE discordId = '${interaction.user.id}' AND player = '${optionPlayerTag}'`);
+            await Database.runCommand(db, `DELETE FROM UserConnections WHERE discordId = '${interaction.user.id}' AND player = '${optionPlayerTag}'`);
             await interaction.reply({ content: localeJSON.clashofclans_account_unlinked_ok, ephemeral: true });    
 
-            const player = await getDatabase(db, `SELECT * FROM PlayerData WHERE tag = '${optionPlayerTag}'`);
+            const player = await Database.getSingleRow(db, `SELECT * FROM PlayerData WHERE tag = '${optionPlayerTag}'`);
             const messageEmbedLog = new EmbedBuilder()
 				.setColor(0xFF0000)
 				.addFields(
@@ -33,7 +33,7 @@ export default {
 				.setTimestamp()
 				.setFooter({ text: `${interaction.user.id}`, iconURL: `${interaction.user.avatarURL()}` });
 
-			let clanConnecteds = await allDatabase(db, `SELECT * FROM GuildConnections WHERE clan = '${player.tag}'`);
+			let clanConnecteds = await Database.getMultipleRow(db, `SELECT * FROM GuildConnections WHERE clan = '${player.tag}'`);
 			for (const connection of clanConnecteds) {
 				if (!connection.channelLogId) continue;
 				
@@ -44,9 +44,9 @@ export default {
 
 				await channel.send({ embeds: [messageEmbedLog] });
 			}
-			await closeConnectionDatabase(db);
+			await Database.closeConnection(db);
         } catch (error) {
-			await closeConnectionDatabase(db);
+			await Database.closeConnection(db);
             await interaction.reply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
             await writeConsoleANDLog(error);
         }
