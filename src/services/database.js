@@ -52,7 +52,7 @@ export async function runCommand(connection, request) {
     connection.run(request, function (err) {
       if (!err) return resolve(true);
       return reject(new DatabaseError(err));
-    })
+    });
   });
 }
 
@@ -61,7 +61,7 @@ export async function initialize() {
   const db = await openConnection();
   try {
     let sqlScripts = fs.readFileSync(SCRIPT_INIT_FILE, 'utf8');
-    sqlScripts = sqlScripts.split(';').map(sql => sql.trim());
+    sqlScripts = sqlScripts.split(';').map((sql) => sql.trim());
     await runCommand(db, 'BEGIN EXCLUSIVE');
     for (const sqlScript of sqlScripts) {
       if (sqlScript) await runCommand(db, sqlScript);
@@ -69,6 +69,8 @@ export async function initialize() {
     await runCommand(db, 'COMMIT');
   } catch (error) {
     await runCommand(db, 'ROLLBACK');
-    throw new DatabaseError(error)
-  } finally { await closeConnection(db); }
+    throw new DatabaseError(error);
+  } finally {
+    await closeConnection(db);
+  }
 }

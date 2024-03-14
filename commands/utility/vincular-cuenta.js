@@ -6,70 +6,64 @@ import { writeConsoleANDLog } from '../../src/write.js';
 import { ClashOfClansError, SQLITE_CONSTRAINT_FOREIGNKEY, SQLITE_CONSTRAINT_UNIQUE } from '../../src/errorCreate.js';
 
 export default {
-	category: 'utility',
-	data: new SlashCommandBuilder()
-		.setName('vincular-cuenta')
-		.setDescription('Vincula tu cuenta de Clash Of Clans a Discord.')
-		.addStringOption(option => option
-			.setName('usuario-tag')
-			.setDescription('Este es el TAG de tu cuenta de Clash Of Clans.')
-			.setRequired(true))
-		.addStringOption(option => option
-			.setName('codigo-api')
-			.setDescription('Este es el codigo API de tu cuenta de Clash Of Clans.')
-			.setRequired(true)),
-	async execute(interaction) {
-		const db = await Database.openConnection();
-		try {
-			const optionPlayerTag = interaction.options.getString('usuario-tag');
-			const optionPlayerToken = interaction.options.getString('codigo-api');
+  category: 'utility',
+  data: new SlashCommandBuilder()
+    .setName('vincular-cuenta')
+    .setDescription('Vincula tu cuenta de Clash Of Clans a Discord.')
+    .addStringOption((option) => option.setName('usuario-tag').setDescription('Este es el TAG de tu cuenta de Clash Of Clans.').setRequired(true))
+    .addStringOption((option) => option.setName('codigo-api').setDescription('Este es el codigo API de tu cuenta de Clash Of Clans.').setRequired(true)),
+  async execute(interaction) {
+    const db = await Database.openConnection();
+    try {
+      const optionPlayerTag = interaction.options.getString('usuario-tag');
+      const optionPlayerToken = interaction.options.getString('codigo-api');
 
-			let playerClan = await ClashofClansAPI.getPlayer(optionPlayerTag);
-			let tokenVerified = await ClashofClansAPI.verifyPlayerToken(optionPlayerTag, optionPlayerToken);
-			if (!tokenVerified) return interaction.reply({ content: localeJSON.clashofclans_token_incorrect, ephemeral: true });
+      let playerClan = await ClashofClansAPI.getPlayer(optionPlayerTag);
+      let tokenVerified = await ClashofClansAPI.verifyPlayerToken(optionPlayerTag, optionPlayerToken);
+      if (!tokenVerified) return interaction.reply({ content: localeJSON.clashofclans_token_incorrect, ephemeral: true });
 
-			await Database.runCommand(db, 'BEGIN');
-			try {
-				await Database.runCommand(db, `INSERT INTO UserConnections VALUES ('${interaction.user.id}', '${playerClan.tag}')`);
-			} catch (error) {
-				if (error.code === SQLITE_CONSTRAINT_UNIQUE) return await interaction.reply({ content: localeJSON.clashofclans_account_linked_fail, ephemeral: true });
-				if (error.code === SQLITE_CONSTRAINT_FOREIGNKEY) {
-					await Database.runCommand(db, `INSERT INTO PlayerData VALUES ('${playerClan.tag}', '${playerClan.name}', '${playerClan.townHallLevel}', '${playerClan.warPreference}')`);
-					await Database.runCommand(db, `INSERT INTO UserConnections VALUES ('${interaction.user.id}', '${playerClan.tag}')`);
-				}
-			}
-			await Database.runCommand(db, 'COMMIT');
-			await interaction.reply({ content: localeJSON.clashofclans_account_linked_ok, ephemeral: true });
+      await Database.runCommand(db, 'BEGIN');
+      try {
+        await Database.runCommand(db, `INSERT INTO UserConnections VALUES ('${interaction.user.id}', '${playerClan.tag}')`);
+      } catch (error) {
+        if (error.code === SQLITE_CONSTRAINT_UNIQUE) return await interaction.reply({ content: localeJSON.clashofclans_account_linked_fail, ephemeral: true });
+        if (error.code === SQLITE_CONSTRAINT_FOREIGNKEY) {
+          await Database.runCommand(db, `INSERT INTO PlayerData VALUES ('${playerClan.tag}', '${playerClan.name}', '${playerClan.townHallLevel}', '${playerClan.warPreference}')`);
+          await Database.runCommand(db, `INSERT INTO UserConnections VALUES ('${interaction.user.id}', '${playerClan.tag}')`);
+        }
+      }
+      await Database.runCommand(db, 'COMMIT');
+      await interaction.reply({ content: localeJSON.clashofclans_account_linked_ok, ephemeral: true });
 
-			const messageEmbedLog = new EmbedBuilder()
-				.setColor(0x00FF00)
-				.addFields(
-					{ name: 'Discord', value: `${interaction.user.tag}`, inline: true },
-					{ name: 'PlayerName', value: `${playerClan.name}`, inline: true },
-					{ name: 'PlayerTag', value: `${playerClan.tag}`, inline: true },
-				)
-				.setTimestamp()
-				.setFooter({ text: `${interaction.user.id}`, iconURL: `${interaction.user.avatarURL()}` });
+      const messageEmbedLog = new EmbedBuilder()
+        .setColor(0x00ff00)
+        .addFields(
+          { name: 'Discord', value: `${interaction.user.tag}`, inline: true },
+          { name: 'PlayerName', value: `${playerClan.name}`, inline: true },
+          { name: 'PlayerTag', value: `${playerClan.tag}`, inline: true }
+        )
+        .setTimestamp()
+        .setFooter({ text: `${interaction.user.id}`, iconURL: `${interaction.user.avatarURL()}` });
 
-			let clanConnecteds = await Database.getMultipleRow(db, `SELECT * FROM GuildConnections WHERE clan = '${playerClan.tag}'`);
-			for (const connection of clanConnecteds) {
-				if (!connection.channelLogId) continue;
-				
-				let guild = interaction.client.guilds.cache.get(connection.guild);
-				if (!guild) await interaction.client.guilds.fetch(connection.guild);
-				let channel = guild.channels.cache.get(connection.channelLogId);
-				if (!channel) guild.channels.fetch(connection.channelLogId);
+      let clanConnecteds = await Database.getMultipleRow(db, `SELECT * FROM GuildConnections WHERE clan = '${playerClan.tag}'`);
+      for (const connection of clanConnecteds) {
+        if (!connection.channelLogId) continue;
 
-				await channel.send({ embeds: [messageEmbedLog] });
-			}
-			await Database.closeConnection(db);
-		} catch (error) {
-			await Database.closeConnection(db);
-			if (error instanceof ClashOfClansError) {
-				if (error.errno === 404) return await interaction.reply({ content: localeJSON.clashofclans_tag_incorrect, ephemeral: true });
-			}
-			await interaction.reply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
-			await writeConsoleANDLog(error);
-		}
-	},
+        let guild = interaction.client.guilds.cache.get(connection.guild);
+        if (!guild) await interaction.client.guilds.fetch(connection.guild);
+        let channel = guild.channels.cache.get(connection.channelLogId);
+        if (!channel) guild.channels.fetch(connection.channelLogId);
+
+        await channel.send({ embeds: [messageEmbedLog] });
+      }
+      await Database.closeConnection(db);
+    } catch (error) {
+      await Database.closeConnection(db);
+      if (error instanceof ClashOfClansError) {
+        if (error.errno === 404) return await interaction.reply({ content: localeJSON.clashofclans_tag_incorrect, ephemeral: true });
+      }
+      await interaction.reply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
+      await writeConsoleANDLog(error);
+    }
+  }
 };
