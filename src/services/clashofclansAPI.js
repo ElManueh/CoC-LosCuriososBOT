@@ -37,7 +37,9 @@ export async function getClan(clanTag) {
     const clan = await AxiosAdapter.requestApiGet(uri);
     return clan;
   } catch (error) {
-    throw new ClashOfClansError(error);
+    error = new ClashOfClansError(error);
+    if (error.errno === HTTP_404_NOT_FOUND) return;
+    throw error;
   }
 }
 
