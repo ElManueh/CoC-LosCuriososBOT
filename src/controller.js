@@ -60,3 +60,32 @@ export async function untrackClan(clanTag, guildId) {
     await Database.closeConnection(db);
   }
 }
+
+export async function trackClan(clanTag, guildId) {
+  const db = await Database.openConnection();
+  try {
+    const clan = await ClashofClansAPI.getClan(clanTag);
+    if (!clan) return ControllerStatus.TAG_INCORRECT;
+
+    await Database.runCommand(db, 'BEGIN IMMEDIATE');
+    try {
+      await Database.runCommand(db, `INSERT INTO GuildConnections (guildId, clan) VALUES ('${guildId}', '${clan.tag}')`);
+    } catch (error) {
+      switch (error.code) {
+        case ErrorCreate.SQLITE_CONSTRAINT_UNIQUE:
+          return ControllerStatus.TRACK_FAIL;
+        case ErrorCreate.SQLITE_CONSTRAINT_FOREIGNKEY:
+          await Database.runCommand(db, `INSERT INTO ClanData (tag) VALUES ('${clan.tag}')`);
+          await Database.runCommand(db, `INSERT INTO GuildConnections (guildId, clan) VALUES ('${guildId}', '${clan.tag}')`);
+      }
+    }
+    await Database.runCommand(db, 'COMMIT');
+    return ControllerStatus.TRACK_OK;
+  } catch (error) {
+    await writeConsoleANDLog(error);
+    await Database.runCommand(db, 'ROLLBACK');
+    throw error;
+  } finally {
+    await Database.closeConnection(db);
+  }
+}
