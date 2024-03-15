@@ -15,6 +15,7 @@
   "database_confirmation_fail": "Command REVERTED successfully in the database.",
   "database_loading_data": "Loading data that matches the search.",
   "database_result_not_found": "No results were found related to your query.",
+  "database_query_incorrect": "The query request is not correct.",
 
   "discord_modify_owner_name": "The server owner cannot be renamed. You have to change it manually.",
   "discord_permission_insufficient": "You do not have permissions to run that command.",

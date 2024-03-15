@@ -10,3 +10,6 @@ export const UNLINK_ACCOUNT_FAIL = 9;
 export const UNLINK_ACCOUNT_OK = 10;
 export const EXECUTE_DB_FAIL = 11;
 export const EXECUTE_DB_OK = 12;
+export const QUERY_DB_INFO = 13;
+export const QUERY_DB_FAIL = 14;
+export const QUERY_DB_OK = 15;

@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, codeBlock } from 'discord.js';
-import * as Database from '../../src/services/database.js';
+import * as Controller from '../../src/controller.js';
+import * as ControllerStatus from '../../src/controller-status.js';
 import localeJSON from '../../src/locale.json' assert { type: 'json' };
-import { writeConsoleANDLog } from '../../src/write.js';
 
 const MAX_LENGTH_DISCORD_MESSAGE = 2000;
 const COLUMN_PADDING_DEFAULT = 20;
@@ -45,12 +45,6 @@ async function displayDataTable(responseTable, interaction) {
   if (tableSegment.length) await interaction.followUp({ content: codeBlock(tableSegment), ephemeral: true });
 }
 
-async function checkQuery(queryDatabase) {
-  queryDatabase = queryDatabase.toLowerCase();
-  const allowedPattern = /^\s*select\b/i;
-  if (!allowedPattern.test(queryDatabase)) throw new Error('query not allowed');
-}
-
 export default {
   category: 'utility',
   data: new SlashCommandBuilder()
@@ -58,35 +52,27 @@ export default {
     .setDescription('Realiza consultas a la base de datos. (Si no hay consulta muestra un menu de uso)')
     .addStringOption((option) => option.setName('consulta').setDescription('Consulta en formato SQL.')),
   async execute(interaction) {
-    const db = await Database.openConnection();
     try {
-      const tableName = 'vista';
-      const tableParameters = 'player, name, role, townHall, lootCapital, addCapital, clanGames, warPreference, warAttacks';
-
       const queryDatabase = interaction.options.getString('consulta');
-      if (!queryDatabase) return interaction.reply({ content: `TableName: ${tableName}\nParameters: ${tableParameters}`, ephemeral: true });
-      await checkQuery(queryDatabase);
 
-      // aqui comprobar que solo se acceda a la vista y no a otras tablas (a no ser que sea yo)
-      const query = ` CREATE TEMPORARY VIEW ${tableName} AS
-                                SELECT ${tableParameters}
-                                FROM PlayerClanData
-                                INNER JOIN PlayerData ON PlayerClanData.player = PlayerData.tag
-                                WHERE role != 'not_member'`;
-      await Database.runCommand(db, query);
-      const replyDatabase = await Database.getMultipleRow(db, queryDatabase);
-      if (!replyDatabase.length) return interaction.reply({ content: localeJSON.database_result_not_found, ephemeral: true });
+      await interaction.deferReply({ ephemeral: true });
+      const response = await Controller.queryDatabase(queryDatabase);
+      switch (response[0]) {
+        case ControllerStatus.QUERY_DB_INFO:
+          return await interaction.editReply({ content: response[1], ephemeral: true });
+        case ControllerStatus.QUERY_DB_FAIL:
+          return await interaction.editReply({ content: localeJSON.database_query_incorrect, ephemeral: true });
+        case ControllerStatus.QUERY_DB_OK:
+          if (!response[1].length) return await interaction.editReply({ content: localeJSON.database_result_not_found, ephemeral: true });
+      }
 
-      const responseTable = await mountDataTable(replyDatabase);
-      if (responseTable.length < MAX_LENGTH_DISCORD_MESSAGE) return interaction.reply({ content: `${codeBlock(responseTable)}`, ephemeral: true });
+      const responseTable = await mountDataTable(response[1]);
+      if (responseTable.length < MAX_LENGTH_DISCORD_MESSAGE) return interaction.editReply({ content: codeBlock(responseTable), ephemeral: true });
 
-      await interaction.reply({ content: localeJSON.database_loading_data, ephemeral: true });
+      await interaction.editReply({ content: localeJSON.database_loading_data, ephemeral: true });
       await displayDataTable(responseTable, interaction);
     } catch (error) {
-      await writeConsoleANDLog(error);
-      await interaction.reply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
-    } finally {
-      await Database.closeConnection(db);
+      await interaction.editReply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
     }
   }
 };

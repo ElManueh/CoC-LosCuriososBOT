@@ -134,3 +134,38 @@ export async function executeDBCancel(connection) {
   await Database.runCommand(connection, 'ROLLBACK');
   await Database.closeConnection(connection);
 }
+
+async function checkQuery(queryDatabase) {
+  queryDatabase = queryDatabase.toLowerCase();
+  const allowedPattern = /^\s*select\b/i;
+  return allowedPattern.test(queryDatabase) ? true : false;
+}
+
+export async function queryDatabase(queryDatabase) {
+  const db = await Database.openConnection();
+  try {
+    const tableName = 'vista';
+    const tableParameters = 'player, name, role, townHall, lootCapital, addCapital, clanGames, warPreference, warAttacks';
+
+    if (!queryDatabase) return [ControllerStatus.QUERY_DB_INFO, `TableName: ${tableName}\nParameters: ${tableParameters}`];
+    if (!(await checkQuery(queryDatabase))) return [ControllerStatus.QUERY_DB_FAIL, null];
+
+    const queryDatabase2 = `CREATE TEMPORARY VIEW ${tableName} AS
+                              SELECT ${tableParameters}
+                              FROM PlayerClanData
+                              INNER JOIN PlayerData ON PlayerClanData.player = PlayerData.tag
+                              WHERE role != 'not_member'`;
+
+    await Database.runCommand(db, 'BEGIN');
+    await Database.runCommand(db, queryDatabase2);
+    const replyDatabase = await Database.getMultipleRow(db, queryDatabase);
+    await Database.runCommand(db, 'COMMIT');
+    return [ControllerStatus.QUERY_DB_OK, replyDatabase];
+  } catch (error) {
+    await writeConsoleANDLog(error);
+    await Database.runCommand(db, 'ROLLBACK');
+    throw error;
+  } finally {
+    await Database.closeConnection(db);
+  }
+}
