@@ -1,5 +1,5 @@
 import * as AxiosAdapter from '../services/axios-adapter.js';
-import { ClashOfClansError } from '../errorCreate.js';
+import { ClashOfClansError, HTTP_404_NOT_FOUND } from '../errorCreate.js';
 
 // Starting module
 const LINK_API = 'https://api.clashofclans.com/v1';
@@ -23,7 +23,9 @@ export async function getPlayer(playerTag) {
     const player = await AxiosAdapter.requestApiGet(uri);
     return player;
   } catch (error) {
-    throw new ClashOfClansError(error);
+    error = new ClashOfClansError(error);
+    if (error.errno === HTTP_404_NOT_FOUND) return;
+    throw error;
   }
 }
 
