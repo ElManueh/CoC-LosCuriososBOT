@@ -24,7 +24,7 @@ export default {
           return await interaction.editReply({ content: localeJSON.clashofclans_clan_untracked_ok, ephemeral: true });
       }
     } catch (error) {
-      await interaction.reply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
+      await interaction.editReply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
     }
   }
 };
