@@ -111,3 +111,26 @@ export async function unlinkAccount(playerTag, userId) {
     await Database.closeConnection(db);
   }
 }
+
+export async function executeDB(queryDatabase) {
+  const db = await Database.openConnection();
+  try {
+    await Database.runCommand(db, 'BEGIN EXCLUSIVE');
+    await Database.runCommand(db, queryDatabase);
+    return [ControllerStatus.EXECUTE_DB_OK, db];
+  } catch (error) {
+    await writeConsoleANDLog(error);
+    await Database.closeConnection(db);
+    return [ControllerStatus.EXECUTE_DB_FAIL];
+  }
+}
+
+export async function executeDBOk(connection) {
+  await Database.runCommand(connection, 'COMMIT');
+  await Database.closeConnection(connection);
+}
+
+export async function executeDBCancel(connection) {
+  await Database.runCommand(connection, 'ROLLBACK');
+  await Database.closeConnection(connection);
+}
