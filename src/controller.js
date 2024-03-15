@@ -89,3 +89,25 @@ export async function trackClan(clanTag, guildId) {
     await Database.closeConnection(db);
   }
 }
+
+export async function unlinkAccount(playerTag, userId) {
+  const db = await Database.openConnection();
+  try {
+    const playerClan = await ClashofClansAPI.getPlayer(playerTag);
+    if (!playerClan) return ControllerStatus.TAG_INCORRECT;
+
+    await Database.runCommand(db, 'BEGIN IMMEDIATE');
+    const isUserConnected = await Database.getSingleRow(db, `SELECT * FROM UserConnections WHERE discordId = '${userId}' AND player = '${playerClan.tag}'`);
+    if (!isUserConnected) return ControllerStatus.UNLINK_ACCOUNT_FAIL;
+
+    await Database.runCommand(db, `DELETE FROM UserConnections WHERE discordId = '${userId}' AND player = '${playerClan.tag}'`);
+    await Database.runCommand(db, 'COMMIT');
+    return ControllerStatus.UNLINK_ACCOUNT_OK;
+  } catch (error) {
+    await writeConsoleANDLog(error);
+    await Database.runCommand(db, 'ROLLBACK');
+    throw error;
+  } finally {
+    await Database.closeConnection(db);
+  }
+}

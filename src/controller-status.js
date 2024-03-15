@@ -6,3 +6,5 @@ export const UNTRACKED_FAIL = 5;
 export const UNTRACKED_OK = 6;
 export const TRACK_FAIL = 7;
 export const TRACK_OK = 8;
+export const UNLINK_ACCOUNT_FAIL = 9;
+export const UNLINK_ACCOUNT_OK = 10;
