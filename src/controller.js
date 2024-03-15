@@ -39,3 +39,24 @@ export async function linkAccount(playerTag, playerToken, userId) {
   }
 }
 
+export async function untrackClan(clanTag, guildId) {
+  const db = await Database.openConnection();
+  try {
+    const clan = await ClashofClansAPI.getClan(clanTag);
+    if (!clan) return ControllerStatus.TAG_INCORRECT;
+
+    await Database.runCommand(db, 'BEGIN IMMEDIATE');
+    const isClanTracked = await Database.getSingleRow(db, `SELECT * FROM GuildConnections WHERE guildId = '${guildId}' AND clan = '${clan.tag}'`);
+    if (!isClanTracked) return ControllerStatus.UNTRACKED_FAIL;
+
+    await Database.runCommand(db, `DELETE FROM GuildConnections WHERE guildId = '${guildId}' AND clan = '${clan.tag}'`);
+    await Database.runCommand(db, 'COMMIT');
+    return ControllerStatus.UNTRACKED_OK;
+  } catch (error) {
+    await writeConsoleANDLog(error);
+    await Database.runCommand(db, 'ROLLBACK');
+    throw error;
+  } finally {
+    await Database.closeConnection(db);
+  }
+}
