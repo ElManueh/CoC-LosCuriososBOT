@@ -22,6 +22,8 @@ export default {
           return await interaction.editReply({ content: localeJSON.clashofclans_clan_untracked_fail, ephemeral: true });
         case ControllerStatus.UNTRACKED_OK:
           return await interaction.editReply({ content: localeJSON.clashofclans_clan_untracked_ok, ephemeral: true });
+        default:
+          throw response;
       }
     } catch (error) {
       await interaction.editReply({ content: localeJSON.error_notify_in_discord, ephemeral: true });
